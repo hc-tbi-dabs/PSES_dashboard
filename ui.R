@@ -1,5 +1,6 @@
 library(shiny)
 library(shinydashboard)
+library(shinyjs)
 library(dplyr)
 library(ggplot2)
 library(plotly)
@@ -15,15 +16,23 @@ data1 <- data1[data1$LEVEL1ID==0 | data1$LEVEL1ID==6,]
 
 # -----------------------------------------------------------------------------
 
+jscode <- "
+shinyjs.collapse = function(boxid) {
+$('#' + boxid).closest('.box').find('[data-widget=collapse]').click();
+}
+"
+
 sidebar <- dashboardSidebar(
   sidebarMenu(id="tabs",
-              menuItem("At a Glance", tabName="general", icon=icon("map"), selected=TRUE),
+              menuItem("Full Results by Year", tabName="general", icon=icon("map"), selected=TRUE),
               menuItem("Search with Criteria", tabName="advanced", icon=icon("search")),
               menuItem("About PSES", tabName="about",icon=icon("question"))
   )
 )
 
 body <- dashboardBody(
+  useShinyjs(),
+  extendShinyjs(text=jscode),
   tabItems(
     tabItem(
       tabName="general",
@@ -35,8 +44,7 @@ body <- dashboardBody(
           selectInput(inputId="yearp1", label="Year:",
                       c("2019"="2019", "2017"="2017", "2014"="2014",
                         "2011"="2011", "2008"="2008")),
-          actionButton(inputId="expandp1", label="Expand All"),
-          actionButton(inputId="collapsep1", label="Collapse All")
+          actionButton(inputId="expandp1", label="Expand/Collapse All")
         ),
         fluidRow(
           uiOutput(outputId="graphsp1")
@@ -57,8 +65,7 @@ body <- dashboardBody(
                       c("All"="all")),
           selectInput(inputId="extrap2", label="Stratify by:",
                       c("None"="none")),
-          actionButton(inputId="expandp2", label="Expand All"),
-          actionButton(inputId="collapsep2", label="Collapse All")
+          actionButton(inputId="expandp2", label="Expand/Collapse All")
         ),
         fluidRow(
           uiOutput(outputId="graphsp2")

@@ -1,5 +1,6 @@
 library(shiny)
 library(shinydashboard)
+library(shinyjs)
 library(dplyr)
 library(ggplot2)
 library(plotly)
@@ -31,6 +32,11 @@ toDisplay <- rep(0,N)
 # -----------------------------------------------------------------------------
 
 server <- function(input, output) {
+  observeEvent(input$expandp1,{
+    for(i in 1:N) {
+      js$collapse(paste0("b",i))
+    }
+  })
   output$graphsp1 <- renderUI({
     data1.f <- data1[data1$SURVEYR==input$yearp1,]
     for(i in 1:N) {
@@ -44,8 +50,8 @@ server <- function(input, output) {
     qs <- which(toDisplay==1)
     lapply(qs, function(q) {
       qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
-      box(title=qtitle,status="primary",solidHeader=TRUE,width=12,
-          collapsible=TRUE,collapsed=TRUE)
+      box(id=paste0("b",q),title=qtitle,status="primary",solidHeader=TRUE,
+          width=12,collapsible=TRUE,collapsed=TRUE)
     })
   })
 }
