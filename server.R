@@ -5,6 +5,16 @@ library(ggplot2)
 library(plotly)
 library(reshape2)
 
+# csv files (non-webscraping) -------------------------------------------------
+
+qtext <- read.csv("Data/2019_PSES_Supporting_Documentation_Document_de_reference_du_SAFF_2019.csv",
+                  header=TRUE)
+colnames(qtext)[1] <- "Qnum"
+data1 <- read.csv("Data/2019_PSES_SAFF_ subset-1_Sous-ensemble-1.csv", header=TRUE)
+data1 <- data1[data1$LEVEL1ID==0 | data1$LEVEL1ID==6,]
+
+# -----------------------------------------------------------------------------
+
 qIDs <- c(paste0("0",as.character(1:9)),
           as.character(10:17),paste0("18",letters[1:8]),as.character(19:31),
           as.character(33:45),paste0("46",letters[1:8]),as.character(47:58),
@@ -17,14 +27,6 @@ qIDs <- c(paste0("0",as.character(1:9)),
 qIDs <- paste0("Q",qIDs)
 N <- length(qIDs)
 toDisplay <- rep(0,N)
-
-# csv files (non-webscraping) -------------------------------------------------
-
-qtext <- read.csv("Data/2019_PSES_Supporting_Documentation_Document_de_reference_du_SAFF_2019.csv",
-                  header=TRUE)
-colnames(qtext)[1] <- "Qnum"
-data1 <- read.csv("Data/2019_PSES_SAFF_ subset-1_Sous-ensemble-1.csv", header=TRUE)
-data1 <- data1[data1$LEVEL1ID==0 | data1$LEVEL1ID==6,]
 
 # -----------------------------------------------------------------------------
 
