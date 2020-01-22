@@ -30,6 +30,25 @@ qIDs <- paste0("Q",qIDs)
 N <- length(qIDs)
 toDisplay <- rep(0,N)
 
+ans.sets <- list(c("Strongly agree","Somewhat agree","Neither agree nor disagree",
+                  "Somewhat disagree","Strongly disagree","Don't know",
+                  "Not applicable"),
+                c("Always/almost always","Often","Sometimes","Rarely",
+                  "Never/almost never","Don't know","Not applicable"),
+                c("Not at all","To a small extent","To a moderate extent",
+                  "To a large extent","To a very large extent","Don't know",
+                  "Not applicable"),
+                c("Yes","No","Not sure"),
+                c("To retire","To pursue another position within my department or agency",
+                  "To pursue a position in another department or agency",
+                  "To pursue a position outside the federal public service",
+                  "End of my term, casual or student employment","Other"),
+                c("Yes","No"),
+                c("Very low","Low","Moderate","High","Very high","Don't know",
+                  "Not applicable"))
+ans.type <- c(rep(1,16),rep(2,9),rep(1,18),2,rep(1,7),rep(3,8),rep(1,7),4,5,1,1,
+              rep(6,47),1,1,rep(6,48),1,1,rep(3,20),7,2,1,1,6,6,1,3,6,6,1,1,3)
+
 # -----------------------------------------------------------------------------
 
 server <- function(input, output) {
@@ -56,11 +75,33 @@ server <- function(input, output) {
     qs <- which(toDisplay==1)
     lapply(qs, function(q) {
       qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
-      if (q < 10) { # this condition is only here for testing purposes to load faster
+      #if (q < 10) { # this condition is only here for testing purposes to load 
+      
+      res <- data1.f[data1.f$QUESTION==qIDs[q],]
+      v <- c()
+      n <- length(ans.sets[[ans.type[q]]])
+      for(s in paste0("ANSWER",1:n)) {
+        v <- c(v,res[,s])
+      }
+      df <- structure(v,
+                      .Dim=c(nrow(res),n),
+                      .Dimnames=list(c("Public Service","Health Canada"),
+                                     ans.sets[[ans.type[q]]]))
+      df.m <- melt(df)
+      df.m <- rename(df.m, Unit = Var1, Responses = Var2, Proportion = value)
+      
       box(id=paste0("b",q),title=qtitle,status="primary",solidHeader=TRUE,
           width=12,collapsible=TRUE,collapsed=TRUE,
-          renderPlot({ggplot()}))
-      }
+          "(Percentages may not add to 100 due to rounding)",
+          renderPlot(height=200, {
+            ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
+              geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
+              labs(x="Department", y="Proportion responded (%)") +
+              geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
+                        aes(label=Proportion)) +
+              coord_flip()
+          }))
+      #}
     })
   })
 }
