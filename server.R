@@ -30,6 +30,8 @@ qIDs <- paste0("Q",qIDs)
 N <- length(qIDs)
 toDisplay <- rep(0,N)
 
+
+
 # -----------------------------------------------------------------------------
 
 server <- function(input, output) {
@@ -56,8 +58,11 @@ server <- function(input, output) {
     qs <- which(toDisplay==1)
     lapply(qs, function(q) {
       qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
+      if (q < 10) { # this condition is only here for testing purposes to load faster
       box(id=paste0("b",q),title=qtitle,status="primary",solidHeader=TRUE,
-          width=12,collapsible=TRUE,collapsed=TRUE)
+          width=12,collapsible=TRUE,collapsed=TRUE,
+          renderPlot({ggplot()}))
+      }
     })
   })
 }
