@@ -30,8 +30,6 @@ qIDs <- paste0("Q",qIDs)
 N <- length(qIDs)
 toDisplay <- rep(0,N)
 
-
-
 # -----------------------------------------------------------------------------
 
 server <- function(input, output) {
