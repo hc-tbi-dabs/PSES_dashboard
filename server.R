@@ -1,6 +1,7 @@
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
+library(shinycssloaders)
 library(dplyr)
 library(ggplot2)
 library(plotly)
@@ -33,6 +34,11 @@ toDisplay <- rep(0,N)
 
 server <- function(input, output) {
   observeEvent(input$expandp1,{
+    for(i in 1:N) {
+      js$expand(paste0("b",i))
+    }
+  })
+  observeEvent(input$collapsep1,{
     for(i in 1:N) {
       js$collapse(paste0("b",i))
     }

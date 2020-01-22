@@ -1,6 +1,7 @@
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
+library(shinycssloaders)
 library(dplyr)
 library(ggplot2)
 library(plotly)
@@ -17,8 +18,14 @@ data1 <- data1[data1$LEVEL1ID==0 | data1$LEVEL1ID==6,]
 # -----------------------------------------------------------------------------
 
 jscode <- "
+shinyjs.expand = function(boxid) {
+if ($('#' + boxid).closest('.box').hasClass('collapsed-box')) {
+$('#' + boxid).closest('.box').find('[data-widget=collapse]').click(); }
+}
+
 shinyjs.collapse = function(boxid) {
-$('#' + boxid).closest('.box').find('[data-widget=collapse]').click();
+if ($('#' + boxid).closest('.box').hasClass('collapsed-box') == false) {
+$('#' + boxid).closest('.box').find('[data-widget=collapse]').click(); }
 }
 "
 
@@ -44,10 +51,11 @@ body <- dashboardBody(
           selectInput(inputId="yearp1", label="Year:",
                       c("2019"="2019", "2017"="2017", "2014"="2014",
                         "2011"="2011", "2008"="2008")),
-          actionButton(inputId="expandp1", label="Expand/Collapse All")
+          actionButton(inputId="expandp1", label="Expand All"),
+          actionButton(inputId="collapsep1", label="Collapse All")
         ),
         fluidRow(
-          uiOutput(outputId="graphsp1")
+          uiOutput(outputId="graphsp1") %>% withSpinner(color="#777777")
         )
       )
     ),
@@ -65,7 +73,8 @@ body <- dashboardBody(
                       c("All"="all")),
           selectInput(inputId="extrap2", label="Stratify by:",
                       c("None"="none")),
-          actionButton(inputId="expandp2", label="Expand/Collapse All")
+          actionButton(inputId="expandp2", label="Expand All"),
+          actionButton(inputId="collapsep2", label="Collapse All")
         ),
         fluidRow(
           uiOutput(outputId="graphsp2")
