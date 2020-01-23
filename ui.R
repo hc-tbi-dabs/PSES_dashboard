@@ -1,34 +1,76 @@
 library(shiny)
 library(shinydashboard)
+library(shinyjs)
+library(shinycssloaders)
 library(dplyr)
 library(ggplot2)
 library(plotly)
 library(reshape2)
 
+# csv files (non-webscraping) -------------------------------------------------
+
+qtext <- read.csv("Data/2019_PSES_Supporting_Documentation_Document_de_reference_du_SAFF_2019.csv",
+                  header=TRUE)
+colnames(qtext)[1] <- "Qnum"
+data1 <- read.csv("Data/2019_PSES_SAFF_ subset-1_Sous-ensemble-1.csv", header=TRUE)
+data1 <- data1[data1$LEVEL1ID==0 | data1$LEVEL1ID==6,]
+
+# -----------------------------------------------------------------------------
+
+jscode <- "
+shinyjs.expand = function(boxid) {
+if ($('#' + boxid).closest('.box').hasClass('collapsed-box')) {
+$('#' + boxid).closest('.box').find('[data-widget=collapse]').click(); }
+}
+
+shinyjs.collapse = function(boxid) {
+if ($('#' + boxid).closest('.box').hasClass('collapsed-box') == false) {
+$('#' + boxid).closest('.box').find('[data-widget=collapse]').click(); }
+}
+
+shinyjs.toTop = function() {
+window.scrollTo(0, 0);
+}
+
+shinyjs.changeHTMLonRender = function(id, newText) {
+if ($('#' + id).closest('.box').hasClass('collapsed-box') == false) {
+$('#' + id).html(newText); }
+}
+"
+
 sidebar <- dashboardSidebar(
   sidebarMenu(id="tabs",
-              menuItem("At a Glance", tabName="general", icon=icon("map"), selected=TRUE),
+              menuItem("Full Results by Year", tabName="general", icon=icon("map"), selected=TRUE),
               menuItem("Search with Criteria", tabName="advanced", icon=icon("search")),
               menuItem("About PSES", tabName="about",icon=icon("question"))
+  ),
+  absolutePanel(
+    bottom=10, left=50, style="opacity:0.8;", fixed=TRUE,
+    draggable = FALSE,
+    actionButton(inputId="top", label="Back to top")
   )
 )
 
 body <- dashboardBody(
+  useShinyjs(),
+  extendShinyjs(text=jscode),
   tabItems(
     tabItem(
       tabName="general",
       fluidPage(
         titlePanel("Health Canada PSES Results"),
         fluidRow(
-          id="selector-p1",
-          style="margin:20px 30px 20px 30px",
-          selectInput(inputId="year-p1", label="Year:",
+          id="selectorp1",
+          style="margin:20px 20px 50px 30px",
+          selectInput(inputId="yearp1", label="Year:",
                       c("2019"="2019", "2017"="2017", "2014"="2014",
                         "2011"="2011", "2008"="2008")),
-          actionButton(inputId="expand-p1", label="Expand All"),
-          actionButton(inputId="collapse-p1", label="Collapse All")
+          actionButton(inputId="expandp1", label="Expand All"),
+          actionButton(inputId="collapsep1", label="Collapse All")
         ),
-        uiOutput(outputId="graphs-p1")
+        fluidRow(
+          uiOutput(outputId="graphsp1") %>% withSpinner(color="#777777")
+        )
       )
     ),
     tabItem(
@@ -36,19 +78,21 @@ body <- dashboardBody(
       fluidPage(
         titlePanel("Health Canada PSES Results"),
         fluidRow(
-          id="selector-p2",
+          id="selectorp2",
           style="margin:20px 30px 20px 30px;",
-          selectInput(inputId="year-p2", label="Year:",
+          selectInput(inputId="yearp2", label="Year:",
                       c("2019"="2019", "2017"="2017", "2014"="2014",
                         "2011"="2011", "2008"="2008")),
-          selectInput(inputId="theme-p2", label="Theme:",
+          selectInput(inputId="themep2", label="Theme:",
                       c("All"="all")),
-          selectInput(inputId="extra-p2", label="Stratify by:",
+          selectInput(inputId="extrap2", label="Stratify by:",
                       c("None"="none")),
-          actionButton(inputId="expand-p2", label="Expand All"),
-          actionButton(inputId="collapse-p2", label="Collapse All")
+          actionButton(inputId="expandp2", label="Expand All"),
+          actionButton(inputId="collapsep2", label="Collapse All")
         ),
-        uiOutput(outputId="graphs-p2")
+        fluidRow(
+          uiOutput(outputId="graphsp2")
+        )
       )
     ),
     tabItem(
