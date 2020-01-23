@@ -38,16 +38,25 @@ $('#' + id).html(newText); }
 }
 "
 
+header <- dashboardHeader(
+  title = textOutput(outputId="title")
+)
+
 sidebar <- dashboardSidebar(
   sidebarMenu(id="tabs",
-              menuItem("Full Results by Year", tabName="general", icon=icon("map"), selected=TRUE),
-              menuItem("Search with Criteria", tabName="advanced", icon=icon("search")),
-              menuItem("About PSES", tabName="about",icon=icon("question"))
+              menuItem(textOutput(outputId="menu1", inline=TRUE),
+                       tabName="general", icon=icon("map"), selected=TRUE),
+              menuItem(textOutput(outputId="menu2", inline=TRUE),
+                       tabName="advanced", icon=icon("search")),
+              menuItem(textOutput(outputId="menu3", inline=TRUE),
+                       tabName="about",icon=icon("question"))
   ),
+  selectInput(inputId="language", label=textOutput(outputId="displng"),
+                c("English"="en", "Français"="fr")),
   absolutePanel(
     bottom=10, left=50, style="opacity:0.8;", fixed=TRUE,
     draggable = FALSE,
-    actionButton(inputId="top", label="Back to top")
+    actionButton(inputId="top", label=textOutput(outputId="toptxt"))
   )
 )
 
@@ -115,7 +124,7 @@ body <- dashboardBody(
 )
 
 ui <- dashboardPage(
-  dashboardHeader(title="PSES Results"),
+  header,
   sidebar,
   body
 )

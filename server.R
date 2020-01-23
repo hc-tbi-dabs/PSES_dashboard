@@ -49,11 +49,39 @@ ans.sets <- list(c("Strongly agree","Somewhat agree","Neither agree nor disagree
                   "Not applicable"))
 ans.type <- c(rep(1,16),rep(2,9),rep(1,18),2,rep(1,7),rep(3,8),rep(1,7),4,5,1,1,
               rep(6,47),1,1,rep(6,48),1,1,rep(3,20),7,2,1,1,6,6,1,3,6,6,1,1,3)
-#x <- 0
 
 # -----------------------------------------------------------------------------
 
 server <- function(input, output, session) {
+  
+  # Translations --------------------------------------------------------------
+  
+  output$title <- renderText({
+    switch(input$language, "en"="PSES Results", "fr"="Résultats du SAFF")
+  })
+  output$menu1 <- renderText({
+    switch(input$language, "en"="Full Results by Year",
+           "fr"="Résultats complets par année")
+  })
+  output$menu2 <- renderText({
+    switch(input$language, "en"="Search with Criteria",
+           "fr"="Rechercher avec critères")
+  })
+  output$menu3 <- renderText({
+    switch(input$language, "en"="About PSES",
+           "fr"="À propos du SAFF")
+  })
+  output$displng <- renderText({
+    switch(input$language, "en"="Display language:",
+           "fr"="Langue d'affichage:")
+  })
+  output$toptxt <- renderText({
+    switch(input$language, "en"="Back to top",
+           "fr"="Haut de page")
+  })
+  
+  # ---------------------------------------------------------------------------
+  
   observeEvent(input$expandp1,{
     for(i in 1:N) {
       js$expand(paste0("b",i))
@@ -80,7 +108,7 @@ server <- function(input, output, session) {
     qs <- which(toDisplay==1)
     lapply(qs, function(q) {
       qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
-      if (q < 20) { # this condition is only here for testing purposes
+      if (q < 10) { # this condition is only here for testing purposes
       
       res <- data1.f[data1.f$QUESTION==qIDs[q],]
       v <- c()
