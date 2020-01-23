@@ -27,6 +27,15 @@ shinyjs.collapse = function(boxid) {
 if ($('#' + boxid).closest('.box').hasClass('collapsed-box') == false) {
 $('#' + boxid).closest('.box').find('[data-widget=collapse]').click(); }
 }
+
+shinyjs.toTop = function() {
+window.scrollTo(0, 0);
+}
+
+shinyjs.changeHTMLonRender = function(id, newText) {
+if ($('#' + id).closest('.box').hasClass('collapsed-box') == false) {
+$('#' + id).html(newText); }
+}
 "
 
 sidebar <- dashboardSidebar(
@@ -34,6 +43,11 @@ sidebar <- dashboardSidebar(
               menuItem("Full Results by Year", tabName="general", icon=icon("map"), selected=TRUE),
               menuItem("Search with Criteria", tabName="advanced", icon=icon("search")),
               menuItem("About PSES", tabName="about",icon=icon("question"))
+  ),
+  absolutePanel(
+    bottom=10, left=50, style="opacity:0.8;", fixed=TRUE,
+    draggable = FALSE,
+    actionButton(inputId="top", label="Back to top")
   )
 )
 

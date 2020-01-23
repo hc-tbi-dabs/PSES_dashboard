@@ -6,6 +6,7 @@ library(dplyr)
 library(ggplot2)
 library(plotly)
 library(reshape2)
+library(rmarkdown)
 
 # csv files (non-webscraping) -------------------------------------------------
 
@@ -48,10 +49,11 @@ ans.sets <- list(c("Strongly agree","Somewhat agree","Neither agree nor disagree
                   "Not applicable"))
 ans.type <- c(rep(1,16),rep(2,9),rep(1,18),2,rep(1,7),rep(3,8),rep(1,7),4,5,1,1,
               rep(6,47),1,1,rep(6,48),1,1,rep(3,20),7,2,1,1,6,6,1,3,6,6,1,1,3)
+#x <- 0
 
 # -----------------------------------------------------------------------------
 
-server <- function(input, output) {
+server <- function(input, output, session) {
   observeEvent(input$expandp1,{
     for(i in 1:N) {
       js$expand(paste0("b",i))
@@ -61,6 +63,9 @@ server <- function(input, output) {
     for(i in 1:N) {
       js$collapse(paste0("b",i))
     }
+  })
+  observeEvent(input$top,{
+    js$toTop()
   })
   output$graphsp1 <- renderUI({
     data1.f <- data1[data1$SURVEYR==input$yearp1,]
@@ -75,7 +80,7 @@ server <- function(input, output) {
     qs <- which(toDisplay==1)
     lapply(qs, function(q) {
       qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
-      #if (q < 10) { # this condition is only here for testing purposes to load 
+      if (q < 20) { # this condition is only here for testing purposes
       
       res <- data1.f[data1.f$QUESTION==qIDs[q],]
       v <- c()
@@ -92,7 +97,9 @@ server <- function(input, output) {
       
       box(id=paste0("b",q),title=qtitle,status="primary",solidHeader=TRUE,
           width=12,collapsible=TRUE,collapsed=TRUE,
-          "(Percentages may not add to 100 due to rounding)",
+          render_delayed({
+            "(Percentages may not add to 100 due to rounding)"
+          }),
           renderPlot(height=200, {
             ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
               geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
@@ -100,8 +107,14 @@ server <- function(input, output) {
               geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
                         aes(label=Proportion)) +
               coord_flip()
+          }),
+          renderTable(rownames=TRUE, align="c", width="100%", {
+            dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
+                              row.names="Number of Responses")
+            names(dtb) <- c("Health Canada","Public Service")
+            return(dtb)
           }))
-      #}
+      }
     })
   })
 }
