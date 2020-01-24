@@ -43,6 +43,30 @@ header <- dashboardHeader(
 )
 
 sidebar <- dashboardSidebar(
+  tags$head(
+    tags$style(
+      HTML("#language+ div>.selectize-dropdown{
+            background: #1e272c;
+            color: #ffffff;
+            margin-left: 20px}
+
+            #language+ div>.selectize-input{
+            background: #1e272c;
+            color: #ffffff;
+            border-color: #1e272c;
+            width: 160px;
+            margin: 10px 0px 0px 20px;}
+
+            #language+ div>.selectize-input:after{
+            right: 10px;
+            height: 5px;
+            width: 5px;
+            border: 6px solid transparent;
+            border-color: #fff transparent transparent transparent;
+            }
+           ")
+    )
+  ),
   sidebarMenu(id="tabs",
               menuItem(textOutput(outputId="menu1", inline=TRUE),
                        tabName="general", icon=icon("map"), selected=TRUE),
@@ -67,15 +91,15 @@ body <- dashboardBody(
     tabItem(
       tabName="general",
       fluidPage(
-        titlePanel("Health Canada PSES Results"),
+        titlePanel(textOutput(outputId="titlep1")),
         fluidRow(
           id="selectorp1",
           style="margin:20px 20px 50px 30px",
-          selectInput(inputId="yearp1", label="Year:",
+          selectInput(inputId="yearp1", label=textOutput(outputId="yrtxtp1"),
                       c("2019"="2019", "2017"="2017", "2014"="2014",
                         "2011"="2011", "2008"="2008")),
-          actionButton(inputId="expandp1", label="Expand All"),
-          actionButton(inputId="collapsep1", label="Collapse All")
+          actionButton(inputId="expandp1", label=textOutput(outputId="exptxtp1")),
+          actionButton(inputId="collapsep1", label=textOutput(outputId="collpstxtp1"))
         ),
         fluidRow(
           uiOutput(outputId="graphsp1") %>% withSpinner(color="#777777")
@@ -85,19 +109,21 @@ body <- dashboardBody(
     tabItem(
       tabName="advanced",
       fluidPage(
-        titlePanel("Health Canada PSES Results"),
+        titlePanel(textOutput(outputId="titlep2")),
         fluidRow(
           id="selectorp2",
           style="margin:20px 30px 20px 30px;",
-          selectInput(inputId="yearp2", label="Year:",
+          selectInput(inputId="yearp2", label=textOutput(outputId="yrtxtp2"),
                       c("2019"="2019", "2017"="2017", "2014"="2014",
                         "2011"="2011", "2008"="2008")),
-          selectInput(inputId="themep2", label="Theme:",
-                      c("All"="all")),
-          selectInput(inputId="extrap2", label="Stratify by:",
-                      c("None"="none")),
-          actionButton(inputId="expandp2", label="Expand All"),
-          actionButton(inputId="collapsep2", label="Collapse All")
+          # selectInput(inputId="themep2", label=textOutput(outputId="thmtxtp2"),
+          #             c("All / Tout"="all")),
+          uiOutput(outputId="themeselector"),
+          # selectInput(inputId="extrap2", label=textOutput(outputId="strttxtp2"),
+          #             c("None"="none")),
+          uiOutput(outputId="stratselector"),
+          actionButton(inputId="expandp2", label=textOutput(outputId="exptxtp2")),
+          actionButton(inputId="collapsep2", label=textOutput(outputId="collpstxtp2"))
         ),
         fluidRow(
           uiOutput(outputId="graphsp2")
@@ -107,23 +133,17 @@ body <- dashboardBody(
     tabItem(
       tabName="about",
       fluidPage(
-        titlePanel("About PSES"),
-        p("The Public Service Employee Survey (PSES) is a survey conducted 
-          by the Treasury Board of Canada. Its objective is to measure the
-          opinions of federal public servants on their engagement, leadership,
-          workforce, workplace, workplace well-being and compensation."),
-        p("Click",
-          tags$a(href="https://www.canada.ca/en/treasury-board-secretariat/services/innovation/public-service-employee-survey.html",
-                 style="",
-                 "here"),
-          "to learn more."
-        )
+        titlePanel(textOutput(outputId="titlep3")),
+        textOutput(outputId="firsttxtp3"),
+        br(),
+        uiOutput(outputId="secondtxtp3")
       )
     )
   )
 )
 
 ui <- dashboardPage(
+  title = "PSES Results/Résultats du SAFF",
   header,
   sidebar,
   body
