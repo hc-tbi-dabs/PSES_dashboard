@@ -2,7 +2,6 @@ library(shiny)
 library(shinydashboard)
 library(shinyjs)
 library(shinycssloaders)
-library(shinybusy)
 library(dplyr)
 library(ggplot2)
 library(plotly)
@@ -143,10 +142,14 @@ server <- function(input, output, session) {
     tagList(
       if(input$language == "en") {
         selectInput(inputId="themep2", label=textOutput(outputId="thmtxtp2"),
-                    c("All"="all"))
+                    c("All"="all", "Employee engagement"="1", "Leadership"="2",
+                      "Workforce"="3","Workplace"="4","Workplace well-being"="5",
+                      "Compensation"="6"))
       } else {
         selectInput(inputId="themep2", label=textOutput(outputId="thmtxtp2"),
-                    c("Tout"="all"))
+                    c("Tout"="all", "Mobilisation des employés"="1",
+                      "Leadership"="2","Effectif"="3","Milieu de travail"="4",
+                      "Bien-être en milieu de travail"="5", "Rénumération"="6"))
       }
     )
   })
@@ -207,6 +210,16 @@ server <- function(input, output, session) {
       js$collapse(paste0("b",i))
     }
   })
+  observeEvent(input$expandp2,{
+    for(i in N+(1:N)) {
+      js$expand(paste0("b",i))
+    }
+  })
+  observeEvent(input$collapsep2,{
+    for(i in N+(1:N)) {
+      js$collapse(paste0("b",i))
+    }
+  })
   observeEvent(input$top,{
     js$toTop()
   })
@@ -227,7 +240,7 @@ server <- function(input, output, session) {
       } else {
         qtitle <- qtext[qtext$Qnum==qIDs[q],"Français"]
       }
-      if (q < 10) { # this condition is only here for testing purposes
+      if (q < 203) { # this condition is only here for testing purposes
       
       res <- data1.f[data1.f$QUESTION==qIDs[q],]
       v <- c()
@@ -286,4 +299,97 @@ server <- function(input, output, session) {
       }
     })
   })
+  output$graphsp2 <- renderUI({
+    req(input$themep2)
+    data1.f <- data1[data1$SURVEYR==input$yearp2,]
+    for(i in 1:N) {
+      if (input$themep2=="all") {
+        res <- data1.f[data1.f$QUESTION==qIDs[i],]
+      } else {
+        res <- data1.f[data1.f$QUESTION==qIDs[i] & data1.f$INDICATORID==input$themep2,]
+      }
+      if(nrow(res) == 0) {
+        toDisplay[i] = 0
+      } else {
+        toDisplay[i] = 1
+      }
+    }
+    qs <- which(toDisplay==1)
+    lapply(qs, function(q) {
+      if (input$language=="en") {
+        qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
+      } else {
+        qtitle <- qtext[qtext$Qnum==qIDs[q],"Français"]
+      }
+      if (q < 203) { # this condition is only here for testing purposes
+        
+        if (input$themep2=="all") {
+          res <- data1.f[data1.f$QUESTION==qIDs[q],]
+        } else {
+          res <- data1.f[data1.f$QUESTION==qIDs[q] & data1.f$INDICATORID==input$themep2,]
+        }
+        v <- c()
+        n <- length(ans.sets.en[[ans.type[q]]])
+        for(s in paste0("ANSWER",1:n)) {
+          v <- c(v,res[,s])
+        }
+        
+        if (input$language == "en") {
+          df <- structure(v,
+                          .Dim=c(nrow(res),n),
+                          .Dimnames=list(c("Public Service","Health Canada"),
+                                         ans.sets.en[[ans.type[q]]]))
+        } else {
+          df <- structure(v,
+                          .Dim=c(nrow(res),n),
+                          .Dimnames=list(c("Fonction publique","Santé Canada"),
+                                         ans.sets.fr[[ans.type[q]]]))
+        }
+        
+        df.m <- melt(df)
+        df.m <- rename(df.m, Unit = Var1, Responses = Var2, Proportion = value)
+        
+        box(id=paste0("b",q+N),title=qtitle,status="primary",solidHeader=TRUE,
+            width=12,collapsible=TRUE,collapsed=TRUE,
+            render_delayed({
+              txt <- switch(input$language,
+                            "en"="(Percentages may not add to 100 due to rounding)",
+                            "fr"="(Les pourcentages peuvent ne pas totaliser 100
+                            en raison d'erreurs dans les arrondissements)")
+              p(txt)
+            }),
+            renderPlot(height=200, {
+              ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
+                geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
+                labs(x=switch(input$language,"en"="Department","fr"="Département"),
+                     y=switch(input$language, "en"="Proportion responded (%)",
+                              "fr"="Pourcentage répondu (%)"),
+                     fill=switch(input$language, "en"="Responses",
+                                 "fr"="Réponses")) +
+                geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
+                          aes(label=Proportion)) +
+                coord_flip()
+            }),
+            renderTable(rownames=TRUE, align="c", width="100%", {
+              dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
+                                row.names=switch(input$language,
+                                                 "en"="Number of Responses",
+                                                 "fr"="Nombre de réponses"))
+              names(dtb) <- c(switch(input$language,
+                                     "en"="Health Canada","fr"="Santé Canada"),
+                              switch(input$language,
+                                     "en"="Public Service","fr"="Fonction publique"))
+              return(dtb)
+            }))
+      }
+    })
+  })
+  
+  outputOptions(output, "graphsp1", suspendWhenHidden=FALSE)
+  outputOptions(output, "graphsp2", suspendWhenHidden=FALSE)
+  
+  runjs("$(document).on('shiny:value', function(event) {
+    $('body').find('#loadingscrn').hide();
+    $('body').find('#mainscrn').show();
+    })")
 }

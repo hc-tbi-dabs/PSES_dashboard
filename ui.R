@@ -32,10 +32,10 @@ shinyjs.toTop = function() {
 window.scrollTo(0, 0);
 }
 
-shinyjs.changeHTMLonRender = function(id, newText) {
-if ($('#' + id).closest('.box').hasClass('collapsed-box') == false) {
-$('#' + id).html(newText); }
-}
+// shinyjs.init = function() {
+// $(document.body).prepend('<div class=\"loadingscrn\"><p>Loading...</p></div>');
+// $(document.body).find('.wrapper').hide();
+// }
 "
 
 header <- dashboardHeader(
@@ -59,12 +59,9 @@ sidebar <- dashboardSidebar(
 
             #language+ div>.selectize-input:after{
             right: 10px;
-            height: 5px;
-            width: 5px;
             border: 6px solid transparent;
             border-color: #fff transparent transparent transparent;
-            }
-           ")
+            }")
     )
   ),
   sidebarMenu(id="tabs",
@@ -76,7 +73,7 @@ sidebar <- dashboardSidebar(
                        tabName="about",icon=icon("question"))
   ),
   selectInput(inputId="language", label=textOutput(outputId="displng"),
-                c("English"="en", "Français"="fr")),
+              c("English"="en", "Français"="fr")),
   absolutePanel(
     bottom=10, left=50, style="opacity:0.8;", fixed=TRUE,
     draggable = FALSE,
@@ -85,8 +82,8 @@ sidebar <- dashboardSidebar(
 )
 
 body <- dashboardBody(
-  useShinyjs(),
-  extendShinyjs(text=jscode),
+  #useShinyjs(),
+  #extendShinyjs(text=jscode),
   tabItems(
     tabItem(
       tabName="general",
@@ -94,7 +91,7 @@ body <- dashboardBody(
         titlePanel(textOutput(outputId="titlep1")),
         fluidRow(
           id="selectorp1",
-          style="margin:20px 20px 50px 30px",
+          style="margin:20px 20px 50px 30px;",
           selectInput(inputId="yearp1", label=textOutput(outputId="yrtxtp1"),
                       c("2019"="2019", "2017"="2017", "2014"="2014",
                         "2011"="2011", "2008"="2008")),
@@ -112,21 +109,17 @@ body <- dashboardBody(
         titlePanel(textOutput(outputId="titlep2")),
         fluidRow(
           id="selectorp2",
-          style="margin:20px 30px 20px 30px;",
+          style="margin:20px 20px 50px 30px;",
           selectInput(inputId="yearp2", label=textOutput(outputId="yrtxtp2"),
                       c("2019"="2019", "2017"="2017", "2014"="2014",
                         "2011"="2011", "2008"="2008")),
-          # selectInput(inputId="themep2", label=textOutput(outputId="thmtxtp2"),
-          #             c("All / Tout"="all")),
           uiOutput(outputId="themeselector"),
-          # selectInput(inputId="extrap2", label=textOutput(outputId="strttxtp2"),
-          #             c("None"="none")),
           uiOutput(outputId="stratselector"),
           actionButton(inputId="expandp2", label=textOutput(outputId="exptxtp2")),
           actionButton(inputId="collapsep2", label=textOutput(outputId="collpstxtp2"))
         ),
         fluidRow(
-          uiOutput(outputId="graphsp2")
+          uiOutput(outputId="graphsp2") %>% withSpinner(color="#777777")
         )
       )
     ),
@@ -136,15 +129,25 @@ body <- dashboardBody(
         titlePanel(textOutput(outputId="titlep3")),
         textOutput(outputId="firsttxtp3"),
         br(),
-        uiOutput(outputId="secondtxtp3")
+        uiOutput(outputId="secondtxtp3") 
       )
     )
   )
 )
 
-ui <- dashboardPage(
-  title = "PSES Results/Résultats du SAFF",
-  header,
-  sidebar,
-  body
+ui <- tagList(
+  useShinyjs(),
+  extendShinyjs(text=jscode),
+  div(id="mainscrn",
+      style="display:none;",
+      dashboardPage(
+        title = "PSES Results/Résultats du SAFF",
+        header,
+        sidebar,
+        body)
+  ),
+  div(id="loadingscrn",
+      fluidPage(
+        p("Loading"))
+  )
 )
