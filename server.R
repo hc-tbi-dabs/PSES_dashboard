@@ -67,162 +67,85 @@ ans.sets.fr <- list(c("Fortement d'accord","Plutôt d'accord","Ni d'accord ni en
                     "Ne sais pas","Ne s'applique pas"))
 ans.type <- c(rep(1,16),rep(2,9),rep(1,18),2,rep(1,7),rep(3,8),rep(1,7),4,5,1,1,
               rep(6,47),1,1,rep(6,48),1,1,rep(3,20),7,2,1,1,6,6,1,3,6,6,1,1,3)
-knitr::include_graphics(path = "figures/modal_spinner.png")
 
 # -----------------------------------------------------------------------------
 
 server <- function(input, output, session) {
   
+  rv <- reactiveValues(default.lang = NA)
+  
   # Translations --------------------------------------------------------------
   
   output$title <- renderText({
+    req(input$language)
     switch(input$language, "en"="PSES Results", "fr"="Résultats du SAFF")
   })
-  output$menu1 <- renderText({
-    switch(input$language, "en"="Full Results by Year",
-           "fr"="Résultats complets par année")
-  })
-  output$menu2 <- renderText({
-    switch(input$language, "en"="Search with Criteria",
-           "fr"="Rechercher avec critères")
-  })
-  output$menu3 <- renderText({
-    switch(input$language, "en"="About PSES",
-           "fr"="À propos du SAFF")
-  })
   output$displng <- renderText({
+    req(input$language)
     switch(input$language, "en"="Display language:",
            "fr"="Langue d'affichage:")
   })
   output$toptxt <- renderText({
+    req(input$language)
     switch(input$language, "en"="Back to top",
            "fr"="Haut de page")
   })
-  output$titlep1 <- renderText({
-    switch(input$language, "en"="Health Canada PSES Results",
-           "fr"="Résultats du SAFF pour Santé Canada")
-  })
-  output$titlep2 <- renderText({
-    switch(input$language, "en"="Health Canada PSES Results",
-           "fr"="Résultats du SAFF pour Santé Canada")
-  })
-  output$titlep3 <- renderText({
-    switch(input$language, "en"="About PSES",
-           "fr"="À propos du SAFF")
-  })
-  output$yrtxtp1 <- renderText({
-    switch(input$language, "en"="Year:","fr"="Année:")
-  })
-  output$exptxtp1 <- renderText({
-    switch(input$language, "en"="Expand All",
-           "fr"="Développer tout")
-  })
-  output$collpstxtp1 <- renderText({
-    switch(input$language, "en"="Collapse All",
-           "fr"="Réduire tout")
-  })
-  output$exptxtp2 <- renderText({
-    switch(input$language, "en"="Expand All",
-           "fr"="Développer tout")
-  })
-  output$collpstxtp2 <- renderText({
-    switch(input$language, "en"="Collapse All",
-           "fr"="Réduire tout")
-  })
-  output$yrtxtp2 <- renderText({
-    switch(input$language, "en"="Year:","fr"="Année:")
-  })
-  output$thmtxtp2 <- renderText({
-    switch(input$language, "en"="Theme:","fr"="Thème:")
-  })
-  output$strttxtp2 <- renderText({
-    switch(input$language, "en"="Stratify by:","fr"="Stratifier par:")
-  })
-  output$themeselector <- renderUI({
-    tagList(
-      if(input$language == "en") {
-        selectInput(inputId="themep2", label=textOutput(outputId="thmtxtp2"),
-                    c("All"="all", "Employee engagement"="1", "Leadership"="2",
-                      "Workforce"="3","Workplace"="4","Workplace well-being"="5",
-                      "Compensation"="6"))
-      } else {
-        selectInput(inputId="themep2", label=textOutput(outputId="thmtxtp2"),
-                    c("Tout"="all", "Mobilisation des employés"="1",
-                      "Leadership"="2","Effectif"="3","Milieu de travail"="4",
-                      "Bien-être en milieu de travail"="5", "Rénumération"="6"))
-      }
-    )
-  })
-  output$stratselector <- renderUI({
-    tagList(
-      if(input$language == "en") {
-        selectInput(inputId="extrap2", label=textOutput(outputId="strttxtp2"),
-                    c("None"="none"))
-      } else {
-        selectInput(inputId="extrap2", label=textOutput(outputId="strttxtp2"),
-                    c("Aucun"="none"))
-      }
-    )
-  })
-  output$firsttxtp3 <- renderText({
-    switch(input$language, 
-           "en"="The Public Service Employee Survey (PSES) is a survey conducted 
-                  by the Treasury Board of Canada. Its objective is to measure the
-                  opinions of federal public servants on their engagement, leadership,
-                  workforce, workplace, workplace well-being and compensation.",
-           "fr"="Le Sondage auprès des fonctionnaires fédéraux (SAFF) est un sondage
-                  mené par le Conseil du Trésor du Canada. Son objectif est de mesurer 
-                  les opinions des fonctionnaires fédéraux concernant leur mobilisation,
-                  le leadership, l’effectif, le milieu de travail, le bien-être en
-                  milieu de travail et la rémunération.")
-  })
-  output$secondtxtp3 <- renderUI({
-    tagList(
-      if(input$language == "en") {
-        p("Click",
-          tags$a(href="https://www.canada.ca/en/treasury-board-secretariat/services/innovation/public-service-employee-survey.html",
-                 style="",
-                 target="_blank",
-                 "here"),
-          "to learn more."
-        )
-      } else {
-        p("Cliquez",
-          tags$a(href="https://www.canada.ca/fr/secretariat-conseil-tresor/services/innovation/sondage-fonctionnaires-federaux.html",
-                 style="",
-                 target="_blank",
-                 "ici"),
-          "pour en apprendre plus."
-        )
-      }
-    )
+  output$langselector <- renderUI({
+    req(rv$default.lang)
+    selectInput(inputId="language", label=textOutput(outputId="displng"),
+                c("English"="en", "Français"="fr"), selected=rv$default.lang)
   })
   
-  # ---------------------------------------------------------------------------
+  # Individual observers ------------------------------------------------------
   
+  observeEvent(input$selecteng,{
+    rv$default.lang <- "en"
+    js$showMainContent()
+    js$showEng()
+  })
+  observeEvent(input$selectfr,{
+    rv$default.lang <- "fr"
+    js$showMainContent()
+    js$showFr()
+  })
   observeEvent(input$expandp1,{
-    for(i in 1:N) {
-      js$expand(paste0("b",i))
-    }
+    for(i in 1:N) { js$expand(paste0("b",i)) }
+  })
+  observeEvent(input$expandp1,{
+    for(i in 1:N) { js$expand(paste0("b",i)) }
   })
   observeEvent(input$collapsep1,{
-    for(i in 1:N) {
-      js$collapse(paste0("b",i))
-    }
+    for(i in 1:N) { js$collapse(paste0("b",i)) }
   })
   observeEvent(input$expandp2,{
-    for(i in N+(1:N)) {
-      js$expand(paste0("b",i))
-    }
+    for(i in N+(1:N)) { js$expand(paste0("b",i)) }
   })
   observeEvent(input$collapsep2,{
-    for(i in N+(1:N)) {
-      js$collapse(paste0("b",i))
-    }
+    for(i in N+(1:N)) { js$collapse(paste0("b",i)) }
+  })
+  observeEvent(input$expandp4,{
+    for(i in (2*N)+(1:N)) { js$expand(paste0("b",i)) }
+  })
+  observeEvent(input$collapsep4,{
+    for(i in (2*N)+(1:N)) { js$collapse(paste0("b",i)) }
+  })
+  observeEvent(input$expandp5,{
+    for(i in (3*N)+(1:N)) { js$expand(paste0("b",i)) }
+  })
+  observeEvent(input$collapsep5,{
+    for(i in (3*N)+(1:N)) { js$collapse(paste0("b",i)) }
   })
   observeEvent(input$top,{
     js$toTop()
   })
+  observeEvent(input$language, {
+    if(input$language=="en") {
+      js$showEng()
+    } else {
+      js$showFr()
+    }
+  })
+  
   output$graphsp1 <- renderUI({
     data1.f <- data1[data1$SURVEYR==input$yearp1,]
     for(i in 1:N) {
@@ -235,12 +158,8 @@ server <- function(input, output, session) {
     }
     qs <- which(toDisplay==1)
     lapply(qs, function(q) {
-      if (input$language=="en") {
-        qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
-      } else {
-        qtitle <- qtext[qtext$Qnum==qIDs[q],"Français"]
-      }
-      if (q < 203) { # this condition is only here for testing purposes
+      qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
+      if (q < 10) { # this condition is only here for testing purposes
       
       res <- data1.f[data1.f$QUESTION==qIDs[q],]
       v <- c()
@@ -249,17 +168,10 @@ server <- function(input, output, session) {
         v <- c(v,res[,s])
       }
       
-      if (input$language == "en") {
-        df <- structure(v,
-                        .Dim=c(nrow(res),n),
-                        .Dimnames=list(c("Public Service","Health Canada"),
-                                       ans.sets.en[[ans.type[q]]]))
-      } else {
-        df <- structure(v,
-                        .Dim=c(nrow(res),n),
-                        .Dimnames=list(c("Fonction publique","Santé Canada"),
-                                       ans.sets.fr[[ans.type[q]]]))
-      }
+      df <- structure(v,
+                      .Dim=c(nrow(res),n),
+                      .Dimnames=list(c("Public Service","Health Canada"),
+                                     ans.sets.en[[ans.type[q]]]))
       
       df.m <- melt(df)
       df.m <- rename(df.m, Unit = Var1, Responses = Var2, Proportion = value)
@@ -267,33 +179,21 @@ server <- function(input, output, session) {
       box(id=paste0("b",q),title=qtitle,status="primary",solidHeader=TRUE,
           width=12,collapsible=TRUE,collapsed=TRUE,
           render_delayed({
-            txt <- switch(input$language,
-                          "en"="(Percentages may not add to 100 due to rounding)",
-                          "fr"="(Les pourcentages peuvent ne pas totaliser 100
-                                en raison d'erreurs dans les arrondissements)")
-            p(txt)
+            p("(Percentages may not add to 100 due to rounding)")
           }),
           renderPlot(height=200, {
             ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
               geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
-              labs(x=switch(input$language,"en"="Department","fr"="Département"),
-                   y=switch(input$language, "en"="Proportion responded (%)",
-                            "fr"="Pourcentage répondu (%)"),
-                   fill=switch(input$language, "en"="Responses",
-                               "fr"="Réponses")) +
+              labs(x="Department", y="Proportion responded (%)",
+                   fill="Responses") +
               geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
                         aes(label=Proportion)) +
               coord_flip()
           }),
           renderTable(rownames=TRUE, align="c", width="100%", {
             dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
-                              row.names=switch(input$language,
-                                               "en"="Number of Responses",
-                                               "fr"="Nombre de réponses"))
-            names(dtb) <- c(switch(input$language,
-                                   "en"="Health Canada","fr"="Santé Canada"),
-                            switch(input$language,
-                                   "en"="Public Service","fr"="Fonction publique"))
+                              row.names="Number of responses")
+            names(dtb) <- c("Health Canada","Public Service")
             return(dtb)
           }))
       }
@@ -316,12 +216,9 @@ server <- function(input, output, session) {
     }
     qs <- which(toDisplay==1)
     lapply(qs, function(q) {
-      if (input$language=="en") {
-        qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
-      } else {
-        qtitle <- qtext[qtext$Qnum==qIDs[q],"Français"]
-      }
-      if (q < 203) { # this condition is only here for testing purposes
+      qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
+      
+      if (q < 20) { # this condition is only here for testing purposes
         
         if (input$themep2=="all") {
           res <- data1.f[data1.f$QUESTION==qIDs[q],]
@@ -334,17 +231,10 @@ server <- function(input, output, session) {
           v <- c(v,res[,s])
         }
         
-        if (input$language == "en") {
-          df <- structure(v,
-                          .Dim=c(nrow(res),n),
-                          .Dimnames=list(c("Public Service","Health Canada"),
-                                         ans.sets.en[[ans.type[q]]]))
-        } else {
-          df <- structure(v,
-                          .Dim=c(nrow(res),n),
-                          .Dimnames=list(c("Fonction publique","Santé Canada"),
-                                         ans.sets.fr[[ans.type[q]]]))
-        }
+        df <- structure(v,
+                        .Dim=c(nrow(res),n),
+                        .Dimnames=list(c("Public Service","Health Canada"),
+                                       ans.sets.en[[ans.type[q]]]))
         
         df.m <- melt(df)
         df.m <- rename(df.m, Unit = Var1, Responses = Var2, Proportion = value)
@@ -352,33 +242,140 @@ server <- function(input, output, session) {
         box(id=paste0("b",q+N),title=qtitle,status="primary",solidHeader=TRUE,
             width=12,collapsible=TRUE,collapsed=TRUE,
             render_delayed({
-              txt <- switch(input$language,
-                            "en"="(Percentages may not add to 100 due to rounding)",
-                            "fr"="(Les pourcentages peuvent ne pas totaliser 100
-                            en raison d'erreurs dans les arrondissements)")
-              p(txt)
+              p("(Percentages may not add to 100 due to rounding)")
             }),
             renderPlot(height=200, {
               ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
                 geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
-                labs(x=switch(input$language,"en"="Department","fr"="Département"),
-                     y=switch(input$language, "en"="Proportion responded (%)",
-                              "fr"="Pourcentage répondu (%)"),
-                     fill=switch(input$language, "en"="Responses",
-                                 "fr"="Réponses")) +
+                labs(x="Department", y="Proportion responded (%)",
+                     fill="Responses") +
                 geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
                           aes(label=Proportion)) +
                 coord_flip()
             }),
             renderTable(rownames=TRUE, align="c", width="100%", {
               dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
-                                row.names=switch(input$language,
-                                                 "en"="Number of Responses",
-                                                 "fr"="Nombre de réponses"))
-              names(dtb) <- c(switch(input$language,
-                                     "en"="Health Canada","fr"="Santé Canada"),
-                              switch(input$language,
-                                     "en"="Public Service","fr"="Fonction publique"))
+                                row.names="Number of responses")
+              names(dtb) <- c("Health Canada","Public Service")
+              return(dtb)
+            }))
+      }
+    })
+  })
+  output$graphsp4 <- renderUI({
+    data1.f <- data1[data1$SURVEYR==input$yearp4,]
+    for(i in 1:N) {
+      res <- data1.f[data1.f$QUESTION==qIDs[i],]
+      if(nrow(res) == 0) {
+        toDisplay[i] = 0
+      } else {
+        toDisplay[i] = 1
+      }
+    }
+    qs <- which(toDisplay==1)
+    lapply(qs, function(q) {
+      qtitle <- qtext[qtext$Qnum==qIDs[q],"Français"]
+      
+      if (q < 10) { # this condition is only here for testing purposes
+        
+        res <- data1.f[data1.f$QUESTION==qIDs[q],]
+        v <- c()
+        n <- length(ans.sets.en[[ans.type[q]]])
+        for(s in paste0("ANSWER",1:n)) {
+          v <- c(v,res[,s])
+        }
+        
+        df <- structure(v,
+                        .Dim=c(nrow(res),n),
+                        .Dimnames=list(c("Fonction publique","Santé Canada"),
+                                       ans.sets.fr[[ans.type[q]]]))
+        
+        df.m <- melt(df)
+        df.m <- rename(df.m, Unit = Var1, Responses = Var2, Proportion = value)
+        
+        box(id=paste0("b",q+2*N),title=qtitle,status="primary",solidHeader=TRUE,
+            width=12,collapsible=TRUE,collapsed=TRUE,
+            render_delayed({
+              p("(Les pourcentages peuvent ne pas totaliser 100 en raison d'erreurs
+                dans les arrondissements)")
+            }),
+            renderPlot(height=200, {
+              ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
+                geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
+                labs(x="Département", y="Pourcentage répondu (%)",
+                     fill="Réponses") +
+                geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
+                          aes(label=Proportion)) +
+                coord_flip()
+            }),
+            renderTable(rownames=TRUE, align="c", width="100%", {
+              dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
+                                row.names="Nombre de réponses")
+              names(dtb) <- c("Santé Canada","Fonction publique")
+              return(dtb)
+            }))
+      }
+    })
+  })
+  output$graphsp5 <- renderUI({
+    req(input$themep5)
+    data1.f <- data1[data1$SURVEYR==input$yearp5,]
+    for(i in 1:N) {
+      if (input$themep5=="all") {
+        res <- data1.f[data1.f$QUESTION==qIDs[i],]
+      } else {
+        res <- data1.f[data1.f$QUESTION==qIDs[i] & data1.f$INDICATORID==input$themep5,]
+      }
+      if(nrow(res) == 0) {
+        toDisplay[i] = 0
+      } else {
+        toDisplay[i] = 1
+      }
+    }
+    qs <- which(toDisplay==1)
+    lapply(qs, function(q) {
+      qtitle <- qtext[qtext$Qnum==qIDs[q],"Français"]
+      
+      if (q < 20) { # this condition is only here for testing purposes
+        
+        if (input$themep5=="all") {
+          res <- data1.f[data1.f$QUESTION==qIDs[q],]
+        } else {
+          res <- data1.f[data1.f$QUESTION==qIDs[q] & data1.f$INDICATORID==input$themep5,]
+        }
+        v <- c()
+        n <- length(ans.sets.en[[ans.type[q]]])
+        for(s in paste0("ANSWER",1:n)) {
+          v <- c(v,res[,s])
+        }
+        
+        df <- structure(v,
+                        .Dim=c(nrow(res),n),
+                        .Dimnames=list(c("Fonction publique","Santé Canada"),
+                                       ans.sets.fr[[ans.type[q]]]))
+        
+        df.m <- melt(df)
+        df.m <- rename(df.m, Unit = Var1, Responses = Var2, Proportion = value)
+        
+        box(id=paste0("b",q+3*N),title=qtitle,status="primary",solidHeader=TRUE,
+            width=12,collapsible=TRUE,collapsed=TRUE,
+            render_delayed({
+              p("(Les pourcentages peuvent ne pas totaliser 100 en raison d'erreurs
+                dans les arrondissements)")
+            }),
+            renderPlot(height=200, {
+              ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
+                geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
+                labs(x="Département", y="Pourcentage répondu (%)",
+                     fill="Réponses") +
+                geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
+                          aes(label=Proportion)) +
+                coord_flip()
+            }),
+            renderTable(rownames=TRUE, align="c", width="100%", {
+              dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
+                                row.names="Nombre de réponses")
+              names(dtb) <- c("Santé Canada","Fonction publique")
               return(dtb)
             }))
       }
@@ -387,9 +384,15 @@ server <- function(input, output, session) {
   
   outputOptions(output, "graphsp1", suspendWhenHidden=FALSE)
   outputOptions(output, "graphsp2", suspendWhenHidden=FALSE)
+  outputOptions(output, "graphsp4", suspendWhenHidden=FALSE)
+  outputOptions(output, "graphsp5", suspendWhenHidden=FALSE)
+  outputOptions(output, "title", suspendWhenHidden=FALSE)
+  outputOptions(output, "displng", suspendWhenHidden=FALSE)
+  outputOptions(output, "toptxt", suspendWhenHidden=FALSE)
+  outputOptions(output, "langselector", suspendWhenHidden=FALSE)
   
   runjs("$(document).on('shiny:value', function(event) {
-    $('body').find('#loadingscrn').hide();
-    $('body').find('#mainscrn').show();
+    $('#spinner').hide();
+    $('#continuebtns').show();
     })")
 }

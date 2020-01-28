@@ -32,10 +32,50 @@ shinyjs.toTop = function() {
 window.scrollTo(0, 0);
 }
 
-// shinyjs.init = function() {
-// $(document.body).prepend('<div class=\"loadingscrn\"><p>Loading...</p></div>');
-// $(document.body).find('.wrapper').hide();
-// }
+shinyjs.showEng = function() {
+$('body').find('.sidebar-menu').find('[data-value=generalen]').show();
+$('body').find('.sidebar-menu').find('[data-value=advanceden]').show();
+$('body').find('.sidebar-menu').find('[data-value=abouten]').show();
+$('body').find('.sidebar-menu').find('[data-value=generalfr]').hide();
+$('body').find('.sidebar-menu').find('[data-value=advancedfr]').hide();
+$('body').find('.sidebar-menu').find('[data-value=aboutfr]').hide();
+$('body').find('.sidebar-menu').find('[data-value=generalen]').click();
+}
+
+shinyjs.showFr = function() {
+$('body').find('.sidebar-menu').find('[data-value=generalen]').hide();
+$('body').find('.sidebar-menu').find('[data-value=advanceden]').hide();
+$('body').find('.sidebar-menu').find('[data-value=abouten]').hide();
+$('body').find('.sidebar-menu').find('[data-value=generalfr]').show();
+$('body').find('.sidebar-menu').find('[data-value=advancedfr]').show();
+$('body').find('.sidebar-menu').find('[data-value=aboutfr]').show();
+$('body').find('.sidebar-menu').find('[data-value=generalfr]').click();
+}
+
+shinyjs.showMainContent = function() {
+$('body').find('#loadingscrn').hide();
+$('body').find('#mainscrn').show();
+}
+"
+
+appCSS <- "
+#loadingscrn {
+position: absolute;
+background: #3c8dbc;
+opacity: 0.9;
+z-index: 100;
+left: 0;
+right: 0;
+height: 100%;
+text-align: center;
+color: #ffffff;
+}
+
+#selecteng, #selectfr {
+margin: 50px 5px 60px 5px;
+color: #444444;
+font-size: 20px;
+}
 "
 
 header <- dashboardHeader(
@@ -65,15 +105,22 @@ sidebar <- dashboardSidebar(
     )
   ),
   sidebarMenu(id="tabs",
-              menuItem(textOutput(outputId="menu1", inline=TRUE),
-                       tabName="general", icon=icon("map"), selected=TRUE),
-              menuItem(textOutput(outputId="menu2", inline=TRUE),
-                       tabName="advanced", icon=icon("search")),
-              menuItem(textOutput(outputId="menu3", inline=TRUE),
-                       tabName="about",icon=icon("question"))
+              menuItem("Full Results by Year",
+                       tabName="generalen", icon=icon("map"), selected=TRUE),
+              menuItem("Search with criteria",
+                       tabName="advanceden", icon=icon("search")),
+              menuItem("About PSES",
+                       tabName="abouten",icon=icon("question")),
+              menuItem("Résultats complets par année",
+                       tabName="generalfr", icon=icon("map")),
+              menuItem("Rechercher avec critères",
+                       tabName="advancedfr", icon=icon("search")),
+              menuItem("À propos du SAFF",
+                       tabName="aboutfr", icon=icon("question"))
   ),
-  selectInput(inputId="language", label=textOutput(outputId="displng"),
-              c("English"="en", "Français"="fr")),
+  # selectInput(inputId="language", label=textOutput(outputId="displng"),
+  #             c("English"="en", "Français"="fr")),
+  uiOutput(outputId="langselector"),
   absolutePanel(
     bottom=10, left=50, style="opacity:0.8;", fixed=TRUE,
     draggable = FALSE,
@@ -82,21 +129,19 @@ sidebar <- dashboardSidebar(
 )
 
 body <- dashboardBody(
-  #useShinyjs(),
-  #extendShinyjs(text=jscode),
   tabItems(
     tabItem(
-      tabName="general",
+      tabName="generalen",
       fluidPage(
-        titlePanel(textOutput(outputId="titlep1")),
+        titlePanel("Health Canada PSES Results"),
         fluidRow(
           id="selectorp1",
           style="margin:20px 20px 50px 30px;",
-          selectInput(inputId="yearp1", label=textOutput(outputId="yrtxtp1"),
+          selectInput(inputId="yearp1", label="Year:",
                       c("2019"="2019", "2017"="2017", "2014"="2014",
                         "2011"="2011", "2008"="2008")),
-          actionButton(inputId="expandp1", label=textOutput(outputId="exptxtp1")),
-          actionButton(inputId="collapsep1", label=textOutput(outputId="collpstxtp1"))
+          actionButton(inputId="expandp1", label="Expand All"),
+          actionButton(inputId="collapsep1", label="Collapse All")
         ),
         fluidRow(
           uiOutput(outputId="graphsp1") %>% withSpinner(color="#777777")
@@ -104,19 +149,23 @@ body <- dashboardBody(
       )
     ),
     tabItem(
-      tabName="advanced",
+      tabName="advanceden",
       fluidPage(
-        titlePanel(textOutput(outputId="titlep2")),
+        titlePanel("Health Canada PSES Results"),
         fluidRow(
           id="selectorp2",
           style="margin:20px 20px 50px 30px;",
-          selectInput(inputId="yearp2", label=textOutput(outputId="yrtxtp2"),
+          selectInput(inputId="yearp2", label="Year:",
                       c("2019"="2019", "2017"="2017", "2014"="2014",
                         "2011"="2011", "2008"="2008")),
-          uiOutput(outputId="themeselector"),
-          uiOutput(outputId="stratselector"),
-          actionButton(inputId="expandp2", label=textOutput(outputId="exptxtp2")),
-          actionButton(inputId="collapsep2", label=textOutput(outputId="collpstxtp2"))
+          selectInput(inputId="themep2", label="Theme:",
+                      c("All"="all", "Employee engagement"="1", "Leadership"="2",
+                        "Workforce"="3","Workplace"="4","Workplace well-being"="5",
+                        "Compensation"="6")),
+          selectInput(inputId="extrap2", label="Stratify by:",
+                      c("None"="none")),
+          actionButton(inputId="expandp2", label="Expand All"),
+          actionButton(inputId="collapsep2", label="Collapse All")
         ),
         fluidRow(
           uiOutput(outputId="graphsp2") %>% withSpinner(color="#777777")
@@ -124,12 +173,80 @@ body <- dashboardBody(
       )
     ),
     tabItem(
-      tabName="about",
+      tabName="abouten",
       fluidPage(
-        titlePanel(textOutput(outputId="titlep3")),
-        textOutput(outputId="firsttxtp3"),
-        br(),
-        uiOutput(outputId="secondtxtp3") 
+        titlePanel("About PSES"),
+        p("The Public Service Employee Survey (PSES) is a survey conducted 
+          by the Treasury Board of Canada. Its objective is to measure the
+          opinions of federal public servants on their engagement, leadership,
+          workforce, workplace, workplace well-being and compensation."),
+        p("Click",
+          tags$a(href="https://www.canada.ca/en/treasury-board-secretariat/services/innovation/public-service-employee-survey.html",
+                 style="",
+                 target="_blank",
+                 "here"),
+          "to learn more."
+        )
+      )
+    ),
+    tabItem(
+      tabName="generalfr",
+      fluidPage(
+        titlePanel("Résultats du SAFF pour Santé Canada"),
+        fluidRow(
+          id="selectorp4",
+          style="margin:20px 20px 50px 30px;",
+          selectInput(inputId="yearp4", label="Année:",
+                      c("2019"="2019", "2017"="2017", "2014"="2014",
+                        "2011"="2011", "2008"="2008")),
+          actionButton(inputId="expandp4", label="Développer tout"),
+          actionButton(inputId="collapsep4", label="Réduire tout")
+        ),
+        fluidRow(
+          uiOutput(outputId="graphsp4") %>% withSpinner(color="#777777")
+        )
+      )
+    ),
+    tabItem(
+      tabName="advancedfr",
+      fluidPage(
+        titlePanel("Résultats du SAFF pour Santé Canada"),
+        fluidRow(
+          id="selectorp5",
+          style="margin:20px 20px 50px 30px;",
+          selectInput(inputId="yearp5", label="Année:",
+                      c("2019"="2019", "2017"="2017", "2014"="2014",
+                        "2011"="2011", "2008"="2008")),
+          selectInput(inputId="themep5", label="Thème:",
+                      c("Tout"="all", "Mobilisation des employés"="1",
+                        "Leadership"="2","Effectif"="3","Milieu de travail"="4",
+                        "Bien-être en milieu de travail"="5", "Rénumération"="6")),
+          selectInput(inputId="extrap5", label="Stratifier par:",
+                      c("Aucun"="none")),
+          actionButton(inputId="expandp5", label="Développer tout"),
+          actionButton(inputId="collapsep5", label="Réduire tout")
+        ),
+        fluidRow(
+          uiOutput(outputId="graphsp5") %>% withSpinner(color="#777777")
+        )
+      )
+    ),
+    tabItem(
+      tabName="aboutfr",
+      fluidPage(
+        titlePanel("À propos du SAFF"),
+        p("Le Sondage auprès des fonctionnaires fédéraux (SAFF) est un sondage
+          mené par le Conseil du Trésor du Canada. Son objectif est de mesurer 
+          les opinions des fonctionnaires fédéraux concernant leur mobilisation,
+          le leadership, l’effectif, le milieu de travail, le bien-être en
+          milieu de travail et la rémunération."),
+        p("Cliquez",
+          tags$a(href="https://www.canada.ca/fr/secretariat-conseil-tresor/services/innovation/sondage-fonctionnaires-federaux.html",
+                  style="",
+                  target="_blank",
+                  "ici"),
+          "pour en apprendre plus."
+        )
       )
     )
   )
@@ -138,6 +255,7 @@ body <- dashboardBody(
 ui <- tagList(
   useShinyjs(),
   extendShinyjs(text=jscode),
+  inlineCSS(appCSS),
   div(id="mainscrn",
       style="display:none;",
       dashboardPage(
@@ -148,6 +266,14 @@ ui <- tagList(
   ),
   div(id="loadingscrn",
       fluidPage(
-        p("Loading"))
+        br(style="line-height:100px;"),
+        h1("PSES Results / Résultats du SAFF"),
+        img(id="spinner", src="spinner.gif"),
+        div(id="continuebtns", style="height:151px; display:none;",
+          actionButton(inputId="selecteng", label="Continue in English"),
+          actionButton(inputId="selectfr", label="Continuer en français")
+        ),
+        h4("Welcome! / Bienvenue!")
+      )
   )
 )
