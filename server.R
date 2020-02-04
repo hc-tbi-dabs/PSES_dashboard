@@ -184,11 +184,12 @@ server <- function(input, output, session) {
           renderPlot(height=200, {
             ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
               geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
-              labs(x="Department", y="Proportion responded (%)",
+              labs(x="", y="Proportion responded (%)",
                    fill="Responses") +
               geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
                         aes(label=Proportion)) +
-              coord_flip()
+              coord_flip() +
+              theme_minimal()
           }),
           renderTable(rownames=TRUE, align="c", width="100%", {
             dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
@@ -247,11 +248,12 @@ server <- function(input, output, session) {
             renderPlot(height=200, {
               ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
                 geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
-                labs(x="Department", y="Proportion responded (%)",
+                labs(x="", y="Proportion responded (%)",
                      fill="Responses") +
                 geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
                           aes(label=Proportion)) +
-                coord_flip()
+                coord_flip() +
+                theme_minimal()
             }),
             renderTable(rownames=TRUE, align="c", width="100%", {
               dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
