@@ -193,7 +193,7 @@ server <- function(input, output, session) {
             if(ans.type[q] %in% c(1,2,3,7)) {
               p <- p + scale_fill_manual(
                 breaks=ans.sets.en[[ans.type[q]]],
-                values=c("palegreen3","lightgreen","honeydew","mistyrose","lightcoral","grey80","grey95")
+                values=c("palegreen3","lightgreen","honeydew","mistyrose","lightcoral","grey92","grey80")
               )
             } else if(ans.type[q] == 4) {
               p <- p + scale_fill_manual(
