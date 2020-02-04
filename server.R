@@ -159,7 +159,7 @@ server <- function(input, output, session) {
     qs <- which(toDisplay==1)
     lapply(qs, function(q) {
       qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
-      if (q < 10) { # this condition is only here for testing purposes
+      if (q < 203) { # this condition is only here for testing purposes
       
       res <- data1.f[data1.f$QUESTION==qIDs[q],]
       v <- c()
@@ -182,7 +182,7 @@ server <- function(input, output, session) {
             p("(Percentages may not add to 100 due to rounding)")
           }),
           renderPlot(height=200, {
-            ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
+            p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
               geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
               labs(x="", y="Proportion responded (%)",
                    fill="Responses") +
@@ -190,6 +190,23 @@ server <- function(input, output, session) {
                         aes(label=Proportion)) +
               coord_flip() +
               theme_minimal()
+            if(ans.type[q] %in% c(1,2,3,7)) {
+              p <- p + scale_fill_manual(
+                breaks=ans.sets.en[[ans.type[q]]],
+                values=c("palegreen3","lightgreen","honeydew","mistyrose","lightcoral","grey80","grey95")
+              )
+            } else if(ans.type[q] == 4) {
+              p <- p + scale_fill_manual(
+                breaks=ans.sets.en[[ans.type[q]]],
+                values=c("lightcoral","palegreen3","gray90")
+              )
+            } else if(ans.type[q] == 6) {
+              p <- p + scale_fill_manual(
+                breaks=ans.sets.en[[ans.type[q]]],
+                values=c("lightcoral","palegreen3")
+              )
+            }
+            p
           }),
           renderTable(rownames=TRUE, align="c", width="100%", {
             dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
