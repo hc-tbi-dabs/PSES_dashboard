@@ -107,7 +107,7 @@ sidebar <- dashboardSidebar(
   sidebarMenu(id="tabs",
               menuItem("Full Results by Year",
                        tabName="generalen", icon=icon("map"), selected=TRUE),
-              menuItem("Search with criteria",
+              menuItem("Search with Criteria",
                        tabName="advanceden", icon=icon("search")),
               menuItem("About PSES",
                        tabName="abouten",icon=icon("question")),

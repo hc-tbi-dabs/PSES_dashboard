@@ -68,6 +68,93 @@ ans.sets.fr <- list(c("Fortement d'accord","Plutôt d'accord","Ni d'accord ni en
 ans.type <- c(rep(1,16),rep(2,9),rep(1,18),2,rep(1,7),rep(3,8),rep(1,7),4,5,1,1,
               rep(6,47),1,1,rep(6,48),1,1,rep(3,20),7,2,1,1,6,6,1,3,6,6,1,1,3)
 
+recolourBars <- function(q, p, lang) {
+  if(ans.type[q] %in% c(1,3,7) & lang == "en") {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.en[[ans.type[q]]],
+      values=c("steelblue3","lightskyblue","azure1","peachpuff","lightsalmon","grey92","grey80")
+    )
+  } else if(ans.type[q] %in% c(1,3,7)) {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.fr[[ans.type[q]]],
+      values=c("steelblue3","lightskyblue","azure1","peachpuff","lightsalmon","grey92","grey80")
+    )
+  } else if(ans.type[q] == 2 & q %in% c(18:25,191) & lang == "en") {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.en[[ans.type[q]]],
+      values=c("lightsalmon","peachpuff","azure1","lightskyblue","steelblue3","grey92","grey80")
+    )
+  } else if(ans.type[q] == 2 & q %in% c(18:25,191)) {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.fr[[ans.type[q]]],
+      values=c("lightsalmon","peachpuff","azure1","lightskyblue","steelblue3","grey92","grey80")
+    )
+  } else if (ans.type[q] == 2 & lang == "en") {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.en[[ans.type[q]]],
+      values=c("steelblue3","lightskyblue","azure1","peachpuff","lightsalmon","grey92","grey80")
+    )
+  } else if(ans.type[q] == 2) {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.fr[[ans.type[q]]],
+      values=c("steelblue3","lightskyblue","azure1","peachpuff","lightsalmon","grey92","grey80")
+    )
+  } else if(ans.type[q] == 4 && lang == "en") {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.en[[ans.type[q]]],
+      values=c("lightsalmon","lightskyblue","gray90")
+    )
+  } else if(ans.type[q] == 4) {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.fr[[ans.type[q]]],
+      values=c("lightsalmon","lightskyblue","gray90")
+    )
+  } else if(ans.type[q] == 6 & q %in% c(195, 199) & lang == "en") {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.en[[ans.type[q]]],
+      values=c("lightskyblue","lightsalmon")
+    )
+  } else if(ans.type[q] == 6 & q %in% c(195, 199)) {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.fr[[ans.type[q]]],
+      values=c("lightskyblue","lightsalmon")
+    )
+  } else if(ans.type[q] == 6 & q %in% c(92:116, 142:166, 194) & lang == "en") {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.en[[ans.type[q]]],
+      values=c("palegreen3","lightskyblue")
+    )
+  } else if(ans.type[q] == 6 & q %in% c(92:116, 142:166, 194)) {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.fr[[ans.type[q]]],
+      values=c("palegreen3","lightskyblue")
+    )
+  } else if (ans.type[q] == 6 & lang == "en") {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.en[[ans.type[q]]],
+      values=c("lightsalmon","lightskyblue")
+    )
+  } else if (ans.type[q] == 6) {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.fr[[ans.type[q]]],
+      values=c("lightsalmon","lightskyblue")
+    )
+  } else if (ans.type[q] == 5 & lang == "en") {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.en[[ans.type[q]]],
+      values=c("steelblue3","lightskyblue", "lightblue1","aquamarine","darkseagreen1",
+               "lightgreen","palegreen3")
+    )
+  } else if (ans.type[q] == 5) {
+    p <- p + scale_fill_manual(
+      breaks=ans.sets.fr[[ans.type[q]]],
+      values=c("steelblue3","lightskyblue", "lightblue1","aquamarine","darkseagreen1",
+               "lightgreen","palegreen3")
+    )
+  }
+  return(p)
+}
+
 # -----------------------------------------------------------------------------
 
 server <- function(input, output, session) {
@@ -190,22 +277,7 @@ server <- function(input, output, session) {
                         aes(label=Proportion)) +
               coord_flip() +
               theme_minimal()
-            if(ans.type[q] %in% c(1,2,3,7)) {
-              p <- p + scale_fill_manual(
-                breaks=ans.sets.en[[ans.type[q]]],
-                values=c("palegreen3","lightgreen","honeydew","mistyrose","lightcoral","grey92","grey80")
-              )
-            } else if(ans.type[q] == 4) {
-              p <- p + scale_fill_manual(
-                breaks=ans.sets.en[[ans.type[q]]],
-                values=c("lightcoral","palegreen3","gray90")
-              )
-            } else if(ans.type[q] == 6) {
-              p <- p + scale_fill_manual(
-                breaks=ans.sets.en[[ans.type[q]]],
-                values=c("lightcoral","palegreen3")
-              )
-            }
+            p <- recolourBars(q, p, "en")
             p
           }),
           renderTable(rownames=TRUE, align="c", width="100%", {
@@ -263,7 +335,7 @@ server <- function(input, output, session) {
               p("(Percentages may not add to 100 due to rounding)")
             }),
             renderPlot(height=200, {
-              ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
+              p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
                 geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
                 labs(x="", y="Proportion responded (%)",
                      fill="Responses") +
@@ -271,6 +343,8 @@ server <- function(input, output, session) {
                           aes(label=Proportion)) +
                 coord_flip() +
                 theme_minimal()
+              p <- recolourBars(q, p, "en")
+              p
             }),
             renderTable(rownames=TRUE, align="c", width="100%", {
               dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
@@ -319,13 +393,16 @@ server <- function(input, output, session) {
                 dans les arrondissements)")
             }),
             renderPlot(height=200, {
-              ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
+              p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
                 geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
-                labs(x="Département", y="Pourcentage répondu (%)",
+                labs(x="", y="Pourcentage répondu (%)",
                      fill="Réponses") +
                 geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
                           aes(label=Proportion)) +
-                coord_flip()
+                coord_flip() +
+                theme_minimal()
+              p <- recolourBars(q, p, "fr")
+              p
             }),
             renderTable(rownames=TRUE, align="c", width="100%", {
               dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
@@ -383,13 +460,16 @@ server <- function(input, output, session) {
                 dans les arrondissements)")
             }),
             renderPlot(height=200, {
-              ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
+              p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
                 geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
-                labs(x="Département", y="Pourcentage répondu (%)",
+                labs(x="", y="Pourcentage répondu (%)",
                      fill="Réponses") +
                 geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
                           aes(label=Proportion)) +
-                coord_flip()
+                coord_flip() +
+                theme_minimal()
+              p <- recolourBars(q, p, "fr")
+              p
             }),
             renderTable(rownames=TRUE, align="c", width="100%", {
               dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
