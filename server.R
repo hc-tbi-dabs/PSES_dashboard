@@ -13,8 +13,12 @@ library(rmarkdown)
 qtext <- read.csv("Data/2019_PSES_Supporting_Documentation_Document_de_reference_du_SAFF_2019.csv",
                   header=TRUE)
 colnames(qtext)[1] <- "Qnum"
-data1 <- read.csv("Data/2019_PSES_SAFF_ subset-1_Sous-ensemble-1.csv", header=TRUE)
-data1 <- data1[data1$LEVEL1ID==0 | data1$LEVEL1ID==6,]
+# data1 <- read.csv("Data/2019_PSES_SAFF_ subset-1_Sous-ensemble-1.csv", header=TRUE)
+# data1 <- data1[data1$LEVEL1ID==0 | data1$LEVEL1ID==6,]
+data5 <- read.csv("Data/2019_PSES_SAFF_Subset-5_Sous-ensemble-5.csv", header=TRUE)
+data5 <- data5[data5$LEVEL1ID==0 | (data5$LEVEL1ID==6 & data5$LEVEL2ID==0) |
+                 (data5$LEVEL1ID==6 & data5$LEVEL2ID==210 & data5$LEVEL3ID == 0) |
+                 (data5$LEVEL1ID==6 & data5$LEVEL2ID==210 & data5$LEVEL3ID == 328),]
 
 # -----------------------------------------------------------------------------
 
@@ -234,9 +238,9 @@ server <- function(input, output, session) {
   })
   
   output$graphsp1 <- renderUI({
-    data1.f <- data1[data1$SURVEYR==input$yearp1,]
+    data5.f <- data5[data5$SURVEYR==input$yearp1,]
     for(i in 1:N) {
-      res <- data1.f[data1.f$QUESTION==qIDs[i],]
+      res <- data5.f[data5.f$QUESTION==qIDs[i],]
       if(nrow(res) == 0) {
         toDisplay[i] = 0
       } else {
@@ -246,9 +250,9 @@ server <- function(input, output, session) {
     qs <- which(toDisplay==1)
     lapply(qs, function(q) {
       qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
-      if (q < 203) { # this condition is only here for testing purposes
+      if (q < 10) { # this condition is only here for testing purposes
       
-      res <- data1.f[data1.f$QUESTION==qIDs[q],]
+      res <- data5.f[data5.f$QUESTION==qIDs[q],]
       v <- c()
       n <- length(ans.sets.en[[ans.type[q]]])
       for(s in paste0("ANSWER",1:n)) {
@@ -257,18 +261,19 @@ server <- function(input, output, session) {
       
       df <- structure(v,
                       .Dim=c(nrow(res),n),
-                      .Dimnames=list(c("Public Service","Health Canada"),
+                      .Dimnames=list(c("Public Service","Health Canada",
+                                       "ROEB", "POD"),
                                      ans.sets.en[[ans.type[q]]]))
       
       df.m <- melt(df)
-      df.m <- rename(df.m, Unit = Var1, Responses = Var2, Proportion = value)
+      df.m <- rename(df.m, Unit=Var1, Responses=Var2, Proportion=value)
       
       box(id=paste0("b",q),title=qtitle,status="primary",solidHeader=TRUE,
           width=12,collapsible=TRUE,collapsed=TRUE,
           render_delayed({
             p("(Percentages may not add to 100 due to rounding)")
           }),
-          renderPlot(height=200, {
+          renderPlot(height=250, {
             p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
               geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
               labs(x="", y="Proportion responded (%)",
@@ -281,9 +286,9 @@ server <- function(input, output, session) {
             p
           }),
           renderTable(rownames=TRUE, align="c", width="100%", {
-            dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
-                              row.names="Number of responses")
-            names(dtb) <- c("Health Canada","Public Service")
+            dtb <- data.frame(res[4,"ANSCOUNT"], res[3,"ANSCOUNT"], res[2,"ANSCOUNT"],
+                              res[1, "ANSCOUNT"], row.names="Number of responses")
+            names(dtb) <- c("POD","ROEB","Health Canada","Public Service")
             return(dtb)
           }))
       }
@@ -291,12 +296,12 @@ server <- function(input, output, session) {
   })
   output$graphsp2 <- renderUI({
     req(input$themep2)
-    data1.f <- data1[data1$SURVEYR==input$yearp2,]
+    data5.f <- data5[data5$SURVEYR==input$yearp2,]
     for(i in 1:N) {
       if (input$themep2=="all") {
-        res <- data1.f[data1.f$QUESTION==qIDs[i],]
+        res <- data5.f[data5.f$QUESTION==qIDs[i],]
       } else {
-        res <- data1.f[data1.f$QUESTION==qIDs[i] & data1.f$INDICATORID==input$themep2,]
+        res <- data5.f[data5.f$QUESTION==qIDs[i] & data5.f$INDICATORID==input$themep2,]
       }
       if(nrow(res) == 0) {
         toDisplay[i] = 0
@@ -311,9 +316,9 @@ server <- function(input, output, session) {
       if (q < 20) { # this condition is only here for testing purposes
         
         if (input$themep2=="all") {
-          res <- data1.f[data1.f$QUESTION==qIDs[q],]
+          res <- data5.f[data5.f$QUESTION==qIDs[q],]
         } else {
-          res <- data1.f[data1.f$QUESTION==qIDs[q] & data1.f$INDICATORID==input$themep2,]
+          res <- data5.f[data5.f$QUESTION==qIDs[q] & data5.f$INDICATORID==input$themep2,]
         }
         v <- c()
         n <- length(ans.sets.en[[ans.type[q]]])
@@ -323,18 +328,19 @@ server <- function(input, output, session) {
         
         df <- structure(v,
                         .Dim=c(nrow(res),n),
-                        .Dimnames=list(c("Public Service","Health Canada"),
+                        .Dimnames=list(c("Public Service","Health Canada",
+                                         "ROEB", "POD"),
                                        ans.sets.en[[ans.type[q]]]))
         
         df.m <- melt(df)
-        df.m <- rename(df.m, Unit = Var1, Responses = Var2, Proportion = value)
+        df.m <- rename(df.m, Unit=Var1, Responses=Var2, Proportion=value)
         
         box(id=paste0("b",q+N),title=qtitle,status="primary",solidHeader=TRUE,
             width=12,collapsible=TRUE,collapsed=TRUE,
             render_delayed({
               p("(Percentages may not add to 100 due to rounding)")
             }),
-            renderPlot(height=200, {
+            renderPlot(height=250, {
               p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
                 geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
                 labs(x="", y="Proportion responded (%)",
@@ -347,18 +353,18 @@ server <- function(input, output, session) {
               p
             }),
             renderTable(rownames=TRUE, align="c", width="100%", {
-              dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
-                                row.names="Number of responses")
-              names(dtb) <- c("Health Canada","Public Service")
+              dtb <- data.frame(res[4,"ANSCOUNT"], res[3,"ANSCOUNT"], res[2,"ANSCOUNT"],
+                                res[1, "ANSCOUNT"], row.names="Number of responses")
+              names(dtb) <- c("POD","ROEB","Health Canada","Public Service")
               return(dtb)
             }))
       }
     })
   })
   output$graphsp4 <- renderUI({
-    data1.f <- data1[data1$SURVEYR==input$yearp4,]
+    data5.f <- data5[data5$SURVEYR==input$yearp4,]
     for(i in 1:N) {
-      res <- data1.f[data1.f$QUESTION==qIDs[i],]
+      res <- data5.f[data5.f$QUESTION==qIDs[i],]
       if(nrow(res) == 0) {
         toDisplay[i] = 0
       } else {
@@ -371,7 +377,7 @@ server <- function(input, output, session) {
       
       if (q < 10) { # this condition is only here for testing purposes
         
-        res <- data1.f[data1.f$QUESTION==qIDs[q],]
+        res <- data5.f[data5.f$QUESTION==qIDs[q],]
         v <- c()
         n <- length(ans.sets.en[[ans.type[q]]])
         for(s in paste0("ANSWER",1:n)) {
@@ -380,11 +386,12 @@ server <- function(input, output, session) {
         
         df <- structure(v,
                         .Dim=c(nrow(res),n),
-                        .Dimnames=list(c("Fonction publique","Santé Canada"),
+                        .Dimnames=list(c("Fonction publique","Santé Canada",
+                                         "DGORAL","DPO"),
                                        ans.sets.fr[[ans.type[q]]]))
         
         df.m <- melt(df)
-        df.m <- rename(df.m, Unit = Var1, Responses = Var2, Proportion = value)
+        df.m <- rename(df.m, Unit=Var1, Responses=Var2, Proportion=value)
         
         box(id=paste0("b",q+2*N),title=qtitle,status="primary",solidHeader=TRUE,
             width=12,collapsible=TRUE,collapsed=TRUE,
@@ -392,7 +399,7 @@ server <- function(input, output, session) {
               p("(Les pourcentages peuvent ne pas totaliser 100 en raison d'erreurs
                 dans les arrondissements)")
             }),
-            renderPlot(height=200, {
+            renderPlot(height=250, {
               p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
                 geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
                 labs(x="", y="Pourcentage répondu (%)",
@@ -405,9 +412,9 @@ server <- function(input, output, session) {
               p
             }),
             renderTable(rownames=TRUE, align="c", width="100%", {
-              dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
-                                row.names="Nombre de réponses")
-              names(dtb) <- c("Santé Canada","Fonction publique")
+              dtb <- data.frame(res[4,"ANSCOUNT"], res[3,"ANSCOUNT"], res[2,"ANSCOUNT"],
+                                res[1,"ANSCOUNT"], row.names="Nombre de réponses")
+              names(dtb) <- c("DPO","DGORAL","Santé Canada","Fonction publique")
               return(dtb)
             }))
       }
@@ -415,12 +422,12 @@ server <- function(input, output, session) {
   })
   output$graphsp5 <- renderUI({
     req(input$themep5)
-    data1.f <- data1[data1$SURVEYR==input$yearp5,]
+    data5.f <- data5[data5$SURVEYR==input$yearp5,]
     for(i in 1:N) {
       if (input$themep5=="all") {
-        res <- data1.f[data1.f$QUESTION==qIDs[i],]
+        res <- data5.f[data5.f$QUESTION==qIDs[i],]
       } else {
-        res <- data1.f[data1.f$QUESTION==qIDs[i] & data1.f$INDICATORID==input$themep5,]
+        res <- data5.f[data5.f$QUESTION==qIDs[i] & data5.f$INDICATORID==input$themep5,]
       }
       if(nrow(res) == 0) {
         toDisplay[i] = 0
@@ -435,9 +442,9 @@ server <- function(input, output, session) {
       if (q < 20) { # this condition is only here for testing purposes
         
         if (input$themep5=="all") {
-          res <- data1.f[data1.f$QUESTION==qIDs[q],]
+          res <- data5.f[data5.f$QUESTION==qIDs[q],]
         } else {
-          res <- data1.f[data1.f$QUESTION==qIDs[q] & data1.f$INDICATORID==input$themep5,]
+          res <- data5.f[data5.f$QUESTION==qIDs[q] & data5.f$INDICATORID==input$themep5,]
         }
         v <- c()
         n <- length(ans.sets.en[[ans.type[q]]])
@@ -447,7 +454,8 @@ server <- function(input, output, session) {
         
         df <- structure(v,
                         .Dim=c(nrow(res),n),
-                        .Dimnames=list(c("Fonction publique","Santé Canada"),
+                        .Dimnames=list(c("Fonction publique","Santé Canada",
+                                         "DGORAL","DPO"),
                                        ans.sets.fr[[ans.type[q]]]))
         
         df.m <- melt(df)
@@ -459,7 +467,7 @@ server <- function(input, output, session) {
               p("(Les pourcentages peuvent ne pas totaliser 100 en raison d'erreurs
                 dans les arrondissements)")
             }),
-            renderPlot(height=200, {
+            renderPlot(height=250, {
               p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
                 geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
                 labs(x="", y="Pourcentage répondu (%)",
@@ -472,9 +480,9 @@ server <- function(input, output, session) {
               p
             }),
             renderTable(rownames=TRUE, align="c", width="100%", {
-              dtb <- data.frame(res[2,"ANSCOUNT"], res[1,"ANSCOUNT"],
-                                row.names="Nombre de réponses")
-              names(dtb) <- c("Santé Canada","Fonction publique")
+              dtb <- data.frame(res[4,"ANSCOUNT"], res[3,"ANSCOUNT"], res[2,"ANSCOUNT"],
+                                res[1,"ANSCOUNT"], row.names="Nombre de réponses")
+              names(dtb) <- c("DPO","DGORAL","Santé Canada","Fonction publique")
               return(dtb)
             }))
       }

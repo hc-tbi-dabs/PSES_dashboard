@@ -7,14 +7,6 @@ library(ggplot2)
 library(plotly)
 library(reshape2)
 
-# csv files (non-webscraping) -------------------------------------------------
-
-qtext <- read.csv("Data/2019_PSES_Supporting_Documentation_Document_de_reference_du_SAFF_2019.csv",
-                  header=TRUE)
-colnames(qtext)[1] <- "Qnum"
-data1 <- read.csv("Data/2019_PSES_SAFF_ subset-1_Sous-ensemble-1.csv", header=TRUE)
-data1 <- data1[data1$LEVEL1ID==0 | data1$LEVEL1ID==6,]
-
 # -----------------------------------------------------------------------------
 
 jscode <- "
