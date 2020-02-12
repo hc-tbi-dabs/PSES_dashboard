@@ -48,10 +48,10 @@ data <- data.frame(
 
 ## ~~~~ Text and translations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-units <- read.csv("Data/Lookups/PSES_SAFF-Units_Unités.csv", header=TRUE, encoding="UTF-8", col.names=c("FULL_NAME","UNIT_EN","UNIT_FR"), stringsAsFactors=FALSE)
-questions <- read.csv("Data/Lookups/PSES_SAFF-Questions.csv", header=TRUE, encoding="UTF-8", col.names=c("ID","ANS_TYPE","IS_REV","EN","FR","IND_EN","IND_FR","IND_ID","SUBIND_EN","SUBIND_FR","SUBIND_ID"), stringsAsFactors=FALSE)
-themes <- read.csv("Data/Lookups/PSES_SAFF-Themes_Thèmes.csv", header=TRUE, encoding="UTF-8", col.names=c("THEME_ID","THEME_EN","THEME_FR"), stringsAsFactors=FALSE)
-answers <- read.csv("Data/Lookups/PSES_SAFF-Answers_Réponses.csv", header=TRUE, encoding="UTF-8", col.names=c(paste0("TYPE",1:7,"_EN"), paste0("TYPE",1:7,"_FR")), stringsAsFactors=FALSE)
+units <- read.csv("data/lookups/PSES_SAFF-Units_Unités.csv", header=TRUE, encoding="UTF-8", col.names=c("FULL_NAME","UNIT_EN","UNIT_FR"), stringsAsFactors=FALSE)
+questions <- read.csv("data/lookups/PSES_SAFF-Questions.csv", header=TRUE, encoding="UTF-8", col.names=c("ID","ANS_TYPE","IS_REV","EN","FR","IND_EN","IND_FR","IND_ID","SUBIND_EN","SUBIND_FR","SUBIND_ID"), stringsAsFactors=FALSE)
+themes <- read.csv("data/lookups/PSES_SAFF-Themes_Thèmes.csv", header=TRUE, encoding="UTF-8", col.names=c("THEME_ID","THEME_EN","THEME_FR"), stringsAsFactors=FALSE)
+answers <- read.csv("data/lookups/PSES_SAFF-Answers_Réponses.csv", header=TRUE, encoding="UTF-8", col.names=c(paste0("TYPE",1:7,"_EN"), paste0("TYPE",1:7,"_FR")), stringsAsFactors=FALSE)
 
 ## ~~~~ Table-processing functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -189,4 +189,4 @@ for(id3 in LEVEL3IDs_2017) {
 
 ## ~~~~ File output ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-write.csv(data,"Data/2019_2018_2017-PSES_SAFF-ROEB_DGORAL-Full_data_Données_complètes.csv",fileEncoding="UTF-8")
+write.csv(data,"data/2019_2018_2017-PSES_SAFF-ROEB_DGORAL-Full_data_Données_complètes.csv",fileEncoding="UTF-8")
