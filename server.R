@@ -159,6 +159,31 @@ recolourBars <- function(q, p, lang) {
   return(p)
 }
 
+padTable <- function(tbl, lang) {
+  d <- tbl[0,]
+  d[1,1] <- tbl$`Survey year`[1]
+  
+  if(nrow(tbl[tbl$Organization=="Public Service",]) == 0 & lang == "en") {
+    d[1,2] <- "Public Service"
+    rbind(d,tbl)
+  } else if(nrow(tbl[tbl$Organization=="Public Service",]) == 0) {
+    d[1,2] <- "Fonction publique"
+    rbind(d,tbl)
+  }
+  if(nrow(tbl[tbl$Organization=="Health Canada",]) == 0) {
+    d[1,2] <- "Health Canada"
+    rbind(tbl[1,], d, tbl[-1,])
+  }
+  if(nrow(tbl[tbl$Organization=="Regulatory Operations and Enforcement Branch",]) == 0) {
+    d[1,2] <- "Regulatory Operations and Enforcement Branch"
+    rbind(tbl[1:2,], d, tbl[-(1:2),])
+  }
+  if(nrow(tbl[tbl$Organization=="Planning and Operations Directorate",]) == 0) {
+    d[1,2] <- "Planning and Operations Directorate"
+    rbind(tbl[1:3,], d)
+  }
+}
+
 # -----------------------------------------------------------------------------
 
 server <- function(input, output, session) {
@@ -250,7 +275,7 @@ server <- function(input, output, session) {
     qs <- which(toDisplay==1)
     lapply(qs, function(q) {
       qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
-      if (q < 10) { # this condition is only here for testing purposes
+      if (q < 203) { # this condition is only here for testing purposes
       
       res <- data5.f[data5.f$QUESTION==qIDs[q],]
       v <- c()
