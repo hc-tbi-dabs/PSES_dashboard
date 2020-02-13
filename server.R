@@ -1,3 +1,6 @@
+
+## ~~~~~~~~~~~~ SERVER ~~~~~~~~~~~~~ ##
+
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
@@ -7,522 +10,148 @@ library(ggplot2)
 library(plotly)
 library(reshape2)
 library(rmarkdown)
+options(warn=-1)
 
-# csv files (non-webscraping) -------------------------------------------------
+## ~~~~ Data Files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-qtext <- read.csv("data/2019_PSES_Supporting_Documentation_Document_de_reference_du_SAFF_2019.csv",
-                  header=TRUE)
-colnames(qtext)[1] <- "Qnum"
-data5 <- read.csv("data/2019_PSES_SAFF_Subset-5_Sous-ensemble-5.csv", header=TRUE)
-data5 <- data5[data5$LEVEL1ID==0 | (data5$LEVEL1ID==6 & data5$LEVEL2ID==0) |
-                 (data5$LEVEL1ID==6 & data5$LEVEL2ID==210 & data5$LEVEL3ID == 0) |
-                 (data5$LEVEL1ID==6 & data5$LEVEL2ID==210 & data5$LEVEL3ID == 328),]
+questions <- read.csv("data/lookups/PSES_SAFF-Questions.csv", header=TRUE, encoding="UTF-8", col.names=c("ID","ANS_TYPE","IS_REV","EN","FR","IND_EN","IND_FR","IND_ID","SUBIND_EN","SUBIND_FR","SUBIND_ID"), stringsAsFactors=FALSE)
+themes <- read.csv("data/lookups/PSES_SAFF-Themes_Thèmes.csv", header=TRUE, encoding="UTF-8", col.names=c("THEME_ID","THEME_EN","THEME_FR"), stringsAsFactors=FALSE)
+answers <- read.csv("data/lookups/PSES_SAFF-Answers_Réponses.csv", header=TRUE, encoding="UTF-8", col.names=c(paste0("TYPE",1:7,"_EN"), paste0("TYPE",1:7,"_FR")), stringsAsFactors=FALSE)
+data <- read.csv("data/2019_2018_2017-PSES_SAFF-ROEB_DGORAL-Full_data_Données_complètes.csv", header=TRUE, encoding="UTF-8", stringsAsFactors=FALSE)
+data <- data[,2:ncol(data)]
 
-# -----------------------------------------------------------------------------
+## ~~~~ Global data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-qIDs <- c(paste0("0",as.character(1:9)),
-          as.character(10:17),paste0("18",letters[1:8]),as.character(19:31),
-          as.character(33:45),paste0("46",letters[1:8]),as.character(47:58),
-          paste0("59",letters[1:7]),paste0("60",letters[1:13]),
-          paste0("61",letters[1:9]),paste0("62",letters[1:16]),
-          as.character(63:66),paste0("67",letters[1:7]),
-          paste0("68",letters[1:14]),paste0("69",letters[1:9]),
-          paste0("70",letters[1:16]),as.character(71:73),
-          paste0("74",letters[1:20]),as.character(75:87))
-qIDs <- paste0("Q",qIDs)
-N <- length(qIDs)
+QIDS <- unique(questions$ID)
+N <- length(QIDS)
+
 toDisplay <- rep(0,N)
 
-ans.sets.en <- list(c("Strongly agree","Somewhat agree","Neither agree nor disagree",
-                    "Somewhat disagree","Strongly disagree","Don't know",
-                    "Not applicable"),
-                  c("Always/almost always","Often","Sometimes","Rarely",
-                    "Never/almost never","Don't know","Not applicable"),
-                  c("Not at all","To a small extent","To a moderate extent",
-                    "To a large extent","To a very large extent","Don't know",
-                    "Not applicable"),
-                  c("Yes","No","Not sure"),
-                  c("To retire","To pursue another position within my department or agency",
-                    "To pursue a position in another department or agency",
-                    "To pursue a position outside the federal public service",
-                    "End of my term, casual or student employment","Other"),
-                  c("Yes","No"),
-                  c("Very low","Low","Moderate","High","Very high","Don't know",
-                    "Not applicable"))
-ans.sets.fr <- list(c("Fortement d'accord","Plutôt d'accord","Ni d'accord ni en désaccord",
-                    "Plutôt en désaccord","Fortement en désaccord","Ne sais pas",
-                    "Ne s'applique pas"),
-                  c("Toujours/ Presque toujours","Souvent","Parfois","Rarement",
-                    "Jamais/ Presque jamais","Ne sais pas","Ne s'applique pas"),
-                  c("Aucunement","Dans une faible mesure","Modérément",
-                    "Dans une grande mesure","Dans une très grande mesure",
-                    "Ne sais pas","Ne s'applique pas"),
-                  c("Oui","Non","Pas certain(e)"),
-                  c("Prendre ma retraite",
-                    "Occuper un autre poste au sein de mon ministère ou organisme",
-                    "Occuper un poste dans un autre ministère ou organisme",
-                    "Occuper un poste à l'extérieur de la fonction publique fédérale",
-                    "Fin de mon emploi pour une durée déterminée, occasionnel ou étudiant",
-                    "Autre"),
-                  c("Oui","Non"),
-                  c("Très faible","Faible","Modéré","Élevé","Très élevé",
-                    "Ne sais pas","Ne s'applique pas"))
-ans.type <- c(rep(1,16),rep(2,9),rep(1,18),2,rep(1,7),rep(3,8),rep(1,7),4,5,1,1,
-              rep(6,47),1,1,rep(6,48),1,1,rep(3,20),7,2,1,1,6,6,1,3,6,6,1,1,3)
-
+# change the variable names here
 recolourBars <- function(q, p, lang) {
-  if(ans.type[q] %in% c(1,3,7) & lang == "en") {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.en[[ans.type[q]]],
-      values=c("steelblue3","lightskyblue","azure1","peachpuff","lightsalmon","grey92","grey80")
-    )
-  } else if(ans.type[q] %in% c(1,3,7)) {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.fr[[ans.type[q]]],
-      values=c("steelblue3","lightskyblue","azure1","peachpuff","lightsalmon","grey92","grey80")
-    )
-  } else if(ans.type[q] == 2 & q %in% c(18:25,191) & lang == "en") {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.en[[ans.type[q]]],
-      values=c("lightsalmon","peachpuff","azure1","lightskyblue","steelblue3","grey92","grey80")
-    )
-  } else if(ans.type[q] == 2 & q %in% c(18:25,191)) {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.fr[[ans.type[q]]],
-      values=c("lightsalmon","peachpuff","azure1","lightskyblue","steelblue3","grey92","grey80")
-    )
-  } else if (ans.type[q] == 2 & lang == "en") {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.en[[ans.type[q]]],
-      values=c("steelblue3","lightskyblue","azure1","peachpuff","lightsalmon","grey92","grey80")
-    )
-  } else if(ans.type[q] == 2) {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.fr[[ans.type[q]]],
-      values=c("steelblue3","lightskyblue","azure1","peachpuff","lightsalmon","grey92","grey80")
-    )
-  } else if(ans.type[q] == 4 && lang == "en") {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.en[[ans.type[q]]],
-      values=c("lightsalmon","lightskyblue","gray90")
-    )
-  } else if(ans.type[q] == 4) {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.fr[[ans.type[q]]],
-      values=c("lightsalmon","lightskyblue","gray90")
-    )
-  } else if(ans.type[q] == 6 & q %in% c(195, 199) & lang == "en") {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.en[[ans.type[q]]],
-      values=c("lightskyblue","lightsalmon")
-    )
-  } else if(ans.type[q] == 6 & q %in% c(195, 199)) {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.fr[[ans.type[q]]],
-      values=c("lightskyblue","lightsalmon")
-    )
-  } else if(ans.type[q] == 6 & q %in% c(92:116, 142:166, 194) & lang == "en") {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.en[[ans.type[q]]],
-      values=c("palegreen3","lightskyblue")
-    )
-  } else if(ans.type[q] == 6 & q %in% c(92:116, 142:166, 194)) {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.fr[[ans.type[q]]],
-      values=c("palegreen3","lightskyblue")
-    )
-  } else if (ans.type[q] == 6 & lang == "en") {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.en[[ans.type[q]]],
-      values=c("lightsalmon","lightskyblue")
-    )
-  } else if (ans.type[q] == 6) {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.fr[[ans.type[q]]],
-      values=c("lightsalmon","lightskyblue")
-    )
-  } else if (ans.type[q] == 5 & lang == "en") {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.en[[ans.type[q]]],
-      values=c("steelblue3","lightskyblue", "lightblue1","aquamarine","darkseagreen1",
-               "lightgreen","palegreen3")
-    )
-  } else if (ans.type[q] == 5) {
-    p <- p + scale_fill_manual(
-      breaks=ans.sets.fr[[ans.type[q]]],
-      values=c("steelblue3","lightskyblue", "lightblue1","aquamarine","darkseagreen1",
-               "lightgreen","palegreen3")
-    )
-  }
+  atype <- questions[questions$ID==q,"ANS_TYPE"][1]
+  is.reversed <- questions[questions$ID==q,"IS_REV"][1]
+  if(lang=="en"){ ans.set <- answers[,paste0("TYPE",atype,"_EN")] }
+  else{ ans.set <- answers[,paste0("TYPE",atype,"_FR")] }
+  ans.set <- ans.set[ans.set!=""]
+  
+  if(atype %in% c(1,3,7)){ p <- p+scale_fill_manual(breaks=ans.set,values=c("steelblue3","lightskyblue","azure1","peachpuff","lightsalmon","grey92","grey80")) }
+  else if(atype==2 & is.reversed){ p <- p+scale_fill_manual(breaks=ans.set,values=c("lightsalmon","peachpuff","azure1","lightskyblue","steelblue3","grey92","grey80")) }
+    else if(atype==2){ p <- p+scale_fill_manual(breaks=ans.set,values=c("steelblue3","lightskyblue","azure1","peachpuff","lightsalmon","grey92","grey80")) }
+  else if(atype==4){ p <- p+scale_fill_manual(breaks=ans.set,values=c("lightsalmon","steelblue3","gray90")) }
+  else if(atype==6 & is.reversed){ p <- p+scale_fill_manual(breaks=ans.set,values=c("lightsalmon","steelblue3")) }
+    else if(atype==6){ p <- p+scale_fill_manual(breaks=ans.set,values=c("steelblue3","lightsalmon")) }
+  else if(atype==5){ p <- p+scale_fill_manual(breaks=ans.set,values=c("steelblue3","lightskyblue","lightblue1","aquamarine","darkseagreen1","lightgreen","palegreen3")) }
+  
   return(p)
 }
 
-padTable <- function(tbl, lang) {
-  d <- tbl[0,]
-  d[1,1] <- tbl$`Survey year`[1]
-  
-  if(nrow(tbl[tbl$Organization=="Public Service",]) == 0 & lang == "en") {
-    d[1,2] <- "Public Service"
-    rbind(d,tbl)
-  } else if(nrow(tbl[tbl$Organization=="Public Service",]) == 0) {
-    d[1,2] <- "Fonction publique"
-    rbind(d,tbl)
-  }
-  if(nrow(tbl[tbl$Organization=="Health Canada",]) == 0) {
-    d[1,2] <- "Health Canada"
-    rbind(tbl[1,], d, tbl[-1,])
-  }
-  if(nrow(tbl[tbl$Organization=="Regulatory Operations and Enforcement Branch",]) == 0) {
-    d[1,2] <- "Regulatory Operations and Enforcement Branch"
-    rbind(tbl[1:2,], d, tbl[-(1:2),])
-  }
-  if(nrow(tbl[tbl$Organization=="Planning and Operations Directorate",]) == 0) {
-    d[1,2] <- "Planning and Operations Directorate"
-    rbind(tbl[1:3,], d)
-  }
-}
-
-# -----------------------------------------------------------------------------
+## ~~~~ Main server function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 server <- function(input, output, session) {
-  
   rv <- reactiveValues(default.lang = NA)
   
-  # Translations --------------------------------------------------------------
+  # ---- Translations ---------------------------------------------------------
   
-  output$title <- renderText({
-    req(input$language)
-    switch(input$language, "en"="PSES Results", "fr"="Résultats du SAFF")
-  })
-  output$displng <- renderText({
-    req(input$language)
-    switch(input$language, "en"="Display language:",
-           "fr"="Langue d'affichage:")
-  })
-  output$toptxt <- renderText({
-    req(input$language)
-    switch(input$language, "en"="Back to top",
-           "fr"="Haut de page")
-  })
+  output$title <- renderText({ req(input$language); switch(input$language,"en"="PSES Results","fr"="Résultats du SAFF") })
+  output$displng <- renderText({ req(input$language); switch(input$language,"en"="Display language:","fr"="Langue d'affichage:") })
+  output$toptxt <- renderText({ req(input$language); switch(input$language,"en"="Back to top","fr"="Haut de page") })
   output$langselector <- renderUI({
     req(rv$default.lang)
-    selectInput(inputId="language", label=textOutput(outputId="displng"),
-                c("English"="en", "Français"="fr"), selected=rv$default.lang)
-  })
+    selectInput(inputId="language", label=textOutput(outputId="displng"), c("English"="en","Français"="fr"), selected=rv$default.lang) })
   
-  # Individual observers ------------------------------------------------------
+  # ---- Individual observers -------------------------------------------------
   
-  observeEvent(input$selecteng,{
-    rv$default.lang <- "en"
-    js$showMainContent()
-    js$showEng()
-  })
-  observeEvent(input$selectfr,{
-    rv$default.lang <- "fr"
-    js$showMainContent()
-    js$showFr()
-  })
-  observeEvent(input$expandp1,{
-    for(i in 1:N) { js$expand(paste0("b",i)) }
-  })
-  observeEvent(input$expandp1,{
-    for(i in 1:N) { js$expand(paste0("b",i)) }
-  })
-  observeEvent(input$collapsep1,{
-    for(i in 1:N) { js$collapse(paste0("b",i)) }
-  })
-  observeEvent(input$expandp2,{
-    for(i in N+(1:N)) { js$expand(paste0("b",i)) }
-  })
-  observeEvent(input$collapsep2,{
-    for(i in N+(1:N)) { js$collapse(paste0("b",i)) }
-  })
-  observeEvent(input$expandp4,{
-    for(i in (2*N)+(1:N)) { js$expand(paste0("b",i)) }
-  })
-  observeEvent(input$collapsep4,{
-    for(i in (2*N)+(1:N)) { js$collapse(paste0("b",i)) }
-  })
-  observeEvent(input$expandp5,{
-    for(i in (3*N)+(1:N)) { js$expand(paste0("b",i)) }
-  })
-  observeEvent(input$collapsep5,{
-    for(i in (3*N)+(1:N)) { js$collapse(paste0("b",i)) }
-  })
-  observeEvent(input$top,{
-    js$toTop()
-  })
+  observeEvent(input$selecteng,{ rv$default.lang <- "en"; js$showMainContent(); js$showEng() })
+  observeEvent(input$selectfr,{ rv$default.lang <- "fr"; js$showMainContent();  js$showFr() })
+  observeEvent(input$top,{ js$toTop() })
   observeEvent(input$language, {
-    if(input$language=="en") {
-      js$showEng()
-    } else {
-      js$showFr()
-    }
-  })
+    if(input$language=="en") { js$showEng() }
+    else { js$showFr() } })
   
-  output$graphsp1 <- renderUI({
-    data5.f <- data5[data5$SURVEYR==input$yearp1,]
-    for(i in 1:N) {
-      res <- data5.f[data5.f$QUESTION==qIDs[i],]
-      if(nrow(res) == 0) {
-        toDisplay[i] = 0
-      } else {
-        toDisplay[i] = 1
-      }
-    }
-    qs <- which(toDisplay==1)
+  # ---- Plot outputs ---------------------------------------------------------
+  
+  output$graphsp2 <- renderUI({
+    req(input$yearp2)
+    req(input$themep2)
+    data.f <- data[data$SURVEYR==input$yearp2 & data$THEME_EN==input$themep2,]
+    
+    qs <- as.character(unique(data.f$QID))
     lapply(qs, function(q) {
-      qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
-      if (q < 203) { # this condition is only here for testing purposes
+      qtitle <- as.character(questions[questions$ID==q,"EN"][1])
+      res <- data.f[data.f$QID==q,] # maybe add criterion !is.na(data$ANSWER1)
+      ans.set <- answers[,paste0("TYPE",questions[questions$ID==q,"ANS_TYPE"][1],"_EN")]
+      ans.set <- ans.set[ans.set!=""]
       
-      res <- data5.f[data5.f$QUESTION==qIDs[q],]
       v <- c()
-      n <- length(ans.sets.en[[ans.type[q]]])
-      for(s in paste0("ANSWER",1:n)) {
-        v <- c(v,res[,s])
-      }
-      
-      df <- structure(v,
-                      .Dim=c(nrow(res),n),
-                      .Dimnames=list(c("Public Service","Health Canada",
-                                       "ROEB", "POD"),
-                                     ans.sets.en[[ans.type[q]]]))
-      
+      n <- length(ans.set)
+      for(s in paste0("ANSWER",1:n)) { v <- c(v,res[,s]) }
+      df <- structure(v, .Dim=c(nrow(res),n), .Dimnames=list(as.character(res$ORGANIZATION_EN), ans.set))
       df.m <- melt(df)
       df.m <- rename(df.m, Unit=Var1, Responses=Var2, Proportion=value)
       
-      box(id=paste0("b",q),title=qtitle,status="primary",solidHeader=TRUE,
-          width=12,collapsible=TRUE,collapsed=TRUE,
-          render_delayed({
-            p("(Percentages may not add to 100 due to rounding)")
-          }),
-          renderPlot(height=250, {
+      box(id=paste0("b",which(QIDS==q)), title=qtitle, status="primary", solidHeader=TRUE, width=12, collapsible=TRUE, collapsed=TRUE,
+          render_delayed({ p("(Percentages may not add to 100 due to rounding)") }), # keep?
+          renderPlot(height=400, {
             p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
-              geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
-              labs(x="", y="Proportion responded (%)",
-                   fill="Responses") +
-              geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
-                        aes(label=Proportion)) +
+              geom_bar(stat="identity", position=position_stack(reverse=TRUE)) +
+              labs(x="", y="Proportion responded (%)", fill="Responses") +
+              geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE), aes(label=Proportion)) +
               coord_flip() +
               theme_minimal()
-            p <- recolourBars(q, p, "en")
-            p
+            return(recolourBars(q,p,"en"))
           }),
           renderTable(rownames=TRUE, align="c", width="100%", {
-            dtb <- data.frame(res[4,"ANSCOUNT"], res[3,"ANSCOUNT"], res[2,"ANSCOUNT"],
-                              res[1, "ANSCOUNT"], row.names="Number of responses")
-            names(dtb) <- c("POD","ROEB","Health Canada","Public Service")
+            dtb <- data.frame(as.list(rev(res$COUNT)), row.names="Number of responses")
+            names(dtb) <- rev(as.character(res$ORGANIZATION_EN))
             return(dtb)
           }))
-      }
-    })
-  })
-  output$graphsp2 <- renderUI({
-    req(input$themep2)
-    data5.f <- data5[data5$SURVEYR==input$yearp2,]
-    for(i in 1:N) {
-      if (input$themep2=="all") {
-        res <- data5.f[data5.f$QUESTION==qIDs[i],]
-      } else {
-        res <- data5.f[data5.f$QUESTION==qIDs[i] & data5.f$INDICATORID==input$themep2,]
-      }
-      if(nrow(res) == 0) {
-        toDisplay[i] = 0
-      } else {
-        toDisplay[i] = 1
-      }
-    }
-    qs <- which(toDisplay==1)
-    lapply(qs, function(q) {
-      qtitle <- qtext[qtext$Qnum==qIDs[q],"English"]
-      
-      if (q < 20) { # this condition is only here for testing purposes
-        
-        if (input$themep2=="all") {
-          res <- data5.f[data5.f$QUESTION==qIDs[q],]
-        } else {
-          res <- data5.f[data5.f$QUESTION==qIDs[q] & data5.f$INDICATORID==input$themep2,]
-        }
-        v <- c()
-        n <- length(ans.sets.en[[ans.type[q]]])
-        for(s in paste0("ANSWER",1:n)) {
-          v <- c(v,res[,s])
-        }
-        
-        df <- structure(v,
-                        .Dim=c(nrow(res),n),
-                        .Dimnames=list(c("Public Service","Health Canada",
-                                         "ROEB", "POD"),
-                                       ans.sets.en[[ans.type[q]]]))
-        
-        df.m <- melt(df)
-        df.m <- rename(df.m, Unit=Var1, Responses=Var2, Proportion=value)
-        
-        box(id=paste0("b",q+N),title=qtitle,status="primary",solidHeader=TRUE,
-            width=12,collapsible=TRUE,collapsed=TRUE,
-            render_delayed({
-              p("(Percentages may not add to 100 due to rounding)")
-            }),
-            renderPlot(height=250, {
-              p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
-                geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
-                labs(x="", y="Proportion responded (%)",
-                     fill="Responses") +
-                geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
-                          aes(label=Proportion)) +
-                coord_flip() +
-                theme_minimal()
-              p <- recolourBars(q, p, "en")
-              p
-            }),
-            renderTable(rownames=TRUE, align="c", width="100%", {
-              dtb <- data.frame(res[4,"ANSCOUNT"], res[3,"ANSCOUNT"], res[2,"ANSCOUNT"],
-                                res[1, "ANSCOUNT"], row.names="Number of responses")
-              names(dtb) <- c("POD","ROEB","Health Canada","Public Service")
-              return(dtb)
-            }))
-      }
-    })
-  })
-  output$graphsp4 <- renderUI({
-    data5.f <- data5[data5$SURVEYR==input$yearp4,]
-    for(i in 1:N) {
-      res <- data5.f[data5.f$QUESTION==qIDs[i],]
-      if(nrow(res) == 0) {
-        toDisplay[i] = 0
-      } else {
-        toDisplay[i] = 1
-      }
-    }
-    qs <- which(toDisplay==1)
-    lapply(qs, function(q) {
-      qtitle <- qtext[qtext$Qnum==qIDs[q],"Français"]
-      
-      if (q < 10) { # this condition is only here for testing purposes
-        
-        res <- data5.f[data5.f$QUESTION==qIDs[q],]
-        v <- c()
-        n <- length(ans.sets.en[[ans.type[q]]])
-        for(s in paste0("ANSWER",1:n)) {
-          v <- c(v,res[,s])
-        }
-        
-        df <- structure(v,
-                        .Dim=c(nrow(res),n),
-                        .Dimnames=list(c("Fonction publique","Santé Canada",
-                                         "DGORAL","DPO"),
-                                       ans.sets.fr[[ans.type[q]]]))
-        
-        df.m <- melt(df)
-        df.m <- rename(df.m, Unit=Var1, Responses=Var2, Proportion=value)
-        
-        box(id=paste0("b",q+2*N),title=qtitle,status="primary",solidHeader=TRUE,
-            width=12,collapsible=TRUE,collapsed=TRUE,
-            render_delayed({
-              p("(Les pourcentages peuvent ne pas totaliser 100 en raison d'erreurs
-                dans les arrondissements)")
-            }),
-            renderPlot(height=250, {
-              p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
-                geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
-                labs(x="", y="Pourcentage répondu (%)",
-                     fill="Réponses") +
-                geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
-                          aes(label=Proportion)) +
-                coord_flip() +
-                theme_minimal()
-              p <- recolourBars(q, p, "fr")
-              p
-            }),
-            renderTable(rownames=TRUE, align="c", width="100%", {
-              dtb <- data.frame(res[4,"ANSCOUNT"], res[3,"ANSCOUNT"], res[2,"ANSCOUNT"],
-                                res[1,"ANSCOUNT"], row.names="Nombre de réponses")
-              names(dtb) <- c("DPO","DGORAL","Santé Canada","Fonction publique")
-              return(dtb)
-            }))
-      }
-    })
-  })
+    })})
+  
   output$graphsp5 <- renderUI({
+    req(input$yearp5)
     req(input$themep5)
-    data5.f <- data5[data5$SURVEYR==input$yearp5,]
-    for(i in 1:N) {
-      if (input$themep5=="all") {
-        res <- data5.f[data5.f$QUESTION==qIDs[i],]
-      } else {
-        res <- data5.f[data5.f$QUESTION==qIDs[i] & data5.f$INDICATORID==input$themep5,]
-      }
-      if(nrow(res) == 0) {
-        toDisplay[i] = 0
-      } else {
-        toDisplay[i] = 1
-      }
-    }
-    qs <- which(toDisplay==1)
+    data.f <- data[data$SURVEYR==input$yearp5 & data$THEME_FR==input$themep5,]
+    
+    qs <- as.character(unique(data.f$QID))
     lapply(qs, function(q) {
-      qtitle <- qtext[qtext$Qnum==qIDs[q],"Français"]
+      qtitle <- as.character(questions[questions$ID==q,"FR"][1])
+      res <- data.f[data.f$QID==q,] # maybe add criterion !is.na(data$ANSWER1)
+      ans.set <- answers[,paste0("TYPE",questions[questions$ID==q,"ANS_TYPE"][1],"_FR")]
+      ans.set <- ans.set[ans.set!=""]
       
-      if (q < 20) { # this condition is only here for testing purposes
-        
-        if (input$themep5=="all") {
-          res <- data5.f[data5.f$QUESTION==qIDs[q],]
-        } else {
-          res <- data5.f[data5.f$QUESTION==qIDs[q] & data5.f$INDICATORID==input$themep5,]
-        }
-        v <- c()
-        n <- length(ans.sets.en[[ans.type[q]]])
-        for(s in paste0("ANSWER",1:n)) {
-          v <- c(v,res[,s])
-        }
-        
-        df <- structure(v,
-                        .Dim=c(nrow(res),n),
-                        .Dimnames=list(c("Fonction publique","Santé Canada",
-                                         "DGORAL","DPO"),
-                                       ans.sets.fr[[ans.type[q]]]))
-        
-        df.m <- melt(df)
-        df.m <- rename(df.m, Unit = Var1, Responses = Var2, Proportion = value)
-        
-        box(id=paste0("b",q+3*N),title=qtitle,status="primary",solidHeader=TRUE,
-            width=12,collapsible=TRUE,collapsed=TRUE,
-            render_delayed({
-              p("(Les pourcentages peuvent ne pas totaliser 100 en raison d'erreurs
-                dans les arrondissements)")
-            }),
-            renderPlot(height=250, {
-              p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
-                geom_bar(stat="identity", position=position_stack(reverse = TRUE)) +
-                labs(x="", y="Pourcentage répondu (%)",
-                     fill="Réponses") +
-                geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE),
-                          aes(label=Proportion)) +
-                coord_flip() +
-                theme_minimal()
-              p <- recolourBars(q, p, "fr")
-              p
-            }),
-            renderTable(rownames=TRUE, align="c", width="100%", {
-              dtb <- data.frame(res[4,"ANSCOUNT"], res[3,"ANSCOUNT"], res[2,"ANSCOUNT"],
-                                res[1,"ANSCOUNT"], row.names="Nombre de réponses")
-              names(dtb) <- c("DPO","DGORAL","Santé Canada","Fonction publique")
-              return(dtb)
-            }))
-      }
+      v <- c()
+      n <- length(ans.set)
+      for(s in paste0("ANSWER",1:n)) { v <- c(v,res[,s]) }
+      df <- structure(v, .Dim=c(nrow(res),n), .Dimnames=list(as.character(res$ORGANIZATION_FR), ans.set))
+      df.m <- melt(df)
+      df.m <- rename(df.m, Unit=Var1, Responses=Var2, Proportion=value)
+      
+      box(id=paste0("b",which(QIDS==q)+N), title=qtitle, status="primary", solidHeader=TRUE, width=12, collapsible=TRUE, collapsed=TRUE,
+          render_delayed({ p("(Les pourcentages peuvent ne pas totaliser 100 en raison d'erreurs dans les arrondissements)") }), # keep?
+          renderPlot(height=400, {
+            p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
+              geom_bar(stat="identity", position=position_stack(reverse=TRUE)) +
+              labs(x="", y="Pourcentage répondu (%)", fill="Réponses") +
+              geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE), aes(label=Proportion)) +
+              coord_flip() +
+              theme_minimal()
+            return(recolourBars(q,p,"fr"))
+          }),
+          renderTable(rownames=TRUE, align="c", width="100%", {
+            dtb <- data.frame(as.list(rev(res$COUNT)), row.names="Nombre de réponses")
+            names(dtb) <- rev(as.character(res$ORGANIZATION_FR))
+            return(dtb)
+          }))
     })
   })
   
-  outputOptions(output, "graphsp1", suspendWhenHidden=FALSE)
-  outputOptions(output, "graphsp2", suspendWhenHidden=FALSE)
-  outputOptions(output, "graphsp4", suspendWhenHidden=FALSE)
-  outputOptions(output, "graphsp5", suspendWhenHidden=FALSE)
-  outputOptions(output, "title", suspendWhenHidden=FALSE)
-  outputOptions(output, "displng", suspendWhenHidden=FALSE)
-  outputOptions(output, "toptxt", suspendWhenHidden=FALSE)
-  outputOptions(output, "langselector", suspendWhenHidden=FALSE)
+  outputOptions(output,"graphsp2",suspendWhenHidden=FALSE)
+  outputOptions(output,"graphsp5",suspendWhenHidden=FALSE)
+  outputOptions(output,"title",suspendWhenHidden=FALSE)
+  outputOptions(output,"displng",suspendWhenHidden=FALSE)
+  outputOptions(output,"toptxt",suspendWhenHidden=FALSE)
+  outputOptions(output,"langselector",suspendWhenHidden=FALSE)
   
-  runjs("$(document).on('shiny:value', function(event) {
-    $('#spinner').hide();
-    $('#continuebtns').show();
-    })")
+  runjs("$(document).on('shiny:value', function(event){ $('#spinner').hide(); $('#continuebtns').show(); })")
 }
