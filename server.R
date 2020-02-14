@@ -24,10 +24,9 @@ data <- data[,2:ncol(data)]
 
 QIDS <- unique(questions$ID)
 N <- length(QIDS)
+DIRECTORATE_CHOICES_EN <- c("Planning and Operations (POD)"="POD","Medical Devices and Clinical Compliance (MDCCD)"="MDCCD","Health Products Compliance (HPCD)"="HPCD","Laboratories (LABS)"="LABS","Policy and Regulatory Strategies / Assistant Deputy Minister's Office (PRSD/ADMO)"="PRSD and ADMO","Controlled Substances and Environmental Health (EHPD)"="EHPD","Consumer Product Safety, Tobacco, and Pesticides (CPCSD)"="CPCSD","Cannabis (CD)"="CD")
+DIRECTORATE_CHOICES_FR <- c("Planification et opérations (DPO)"="DPO","Conformité des matériels médicaux et en milieux cliniques (DCMMMC)"="DCMMMC","Conformité des produits de santé (DCPS)"="DCPS","Laboratoires (LABS)"="LABS","Politiques et stratégies réglementaires / Bureau du sous-ministre adjoint (DPSR et BSMA)"="DPSR et BSMA","Substances contrôlées et santé environnementale (DSCSE)"="DSCSE","Sécurité des produits de consommation, tabac et pesticides (DSPCTP)"="DSPCTP","Cannabis (DC)"="DC")
 
-toDisplay <- rep(0,N)
-
-# change the variable names here
 recolourBars <- function(q, p, lang) {
   atype <- questions[questions$ID==q,"ANS_TYPE"][1]
   is.reversed <- questions[questions$ID==q,"IS_REV"][1]
@@ -60,14 +59,53 @@ server <- function(input, output, session) {
     req(rv$default.lang)
     selectInput(inputId="language", label=textOutput(outputId="displng"), c("English"="en","Français"="fr"), selected=rv$default.lang) })
   
+  # ---- Dynamic content ------------------------------------------------------
+  
+  output$dir_outputp1 <- renderUI({
+    if(input$againstp1==2018){ selectInput(inputId="directoratep1",label=NULL,multiple=TRUE,width="600px",DIRECTORATE_CHOICES_EN,selected=unname(DIRECTORATE_CHOICES_EN)) }
+    else{ selectInput(inputId="directoratep1",label=NULL,multiple=TRUE,width="600px",DIRECTORATE_CHOICES_EN[1:(length(DIRECTORATE_CHOICES_EN)-1)],selected=DIRECTORATE_CHOICES_EN[1:(length(DIRECTORATE_CHOICES_EN)-1)]) }
+  })
+  output$chng1_outputp1 <- renderUI({
+    if(input$againstp1==2018){ selectInput(inputId="change1p1",label=NULL,c("ROEB"="ROEB","2018"="2018"),width="90px") }
+    else{ selectInput(inputId="change1p1",label=NULL,c("ROEB"="ROEB","2017"="2017"),width="90px") }
+  })
+  output$chng3_outputp1 <- renderUI({
+    nms <- c("Any directorate",names(DIRECTORATE_CHOICES_EN[DIRECTORATE_CHOICES_EN %in% input$directoratep1]))
+    vals <- c("any",input$directoratep1)
+    names(vals) <- nms
+    if(is.null(input$directoratep1)){ disabled(selectInput(inputId="change3p1",label=NULL,vals)) }
+    else{ selectInput(inputId="change3p1",label=NULL,vals) }
+  })
+  output$dir_outputp4 <- renderUI({
+    if(input$againstp4==2018){ selectInput(inputId="directoratep4",label=NULL,multiple=TRUE,width="629px",DIRECTORATE_CHOICES_FR,selected=unname(DIRECTORATE_CHOICES_FR)) }
+    else{ selectInput(inputId="directoratep4",label=NULL,multiple=TRUE,width="629px",DIRECTORATE_CHOICES_FR[1:(length(DIRECTORATE_CHOICES_FR)-1)],selected=DIRECTORATE_CHOICES_FR[1:(length(DIRECTORATE_CHOICES_FR)-1)]) }
+  })
+  output$chng1_outputp4 <- renderUI({
+    if(input$againstp4==2018){ selectInput(inputId="change1p4",label=NULL,c("DGORAL"="DGORAL","2018"="2018"),width="90px") }
+    else{ selectInput(inputId="change1p4",label=NULL,c("DGORAL"="DGORAL","2017"="2017"),width="90px") }
+  })
+  output$chng3_outputp4 <- renderUI({
+    nms <- c("N'importe quelle direction",names(DIRECTORATE_CHOICES_FR[DIRECTORATE_CHOICES_FR %in% input$directoratep4]))
+    vals <- c("any",input$directoratep4)
+    names(vals) <- nms
+    if(is.null(input$directoratep4)){ disabled(selectInput(inputId="change3p4",label=NULL,vals)) }
+    else{ selectInput(inputId="change3p4",label=NULL,vals) }
+  })
+  
   # ---- Individual observers -------------------------------------------------
   
   observeEvent(input$selecteng,{ rv$default.lang <- "en"; js$showMainContent(); js$showEng() })
   observeEvent(input$selectfr,{ rv$default.lang <- "fr"; js$showMainContent();  js$showFr() })
   observeEvent(input$top,{ js$toTop() })
-  observeEvent(input$language, {
+  observeEvent(input$language,{
     if(input$language=="en") { js$showEng() }
-    else { js$showFr() } })
+    else { js$showFr() }})
+  observeEvent(input$directoratep1,ignoreNULL=FALSE,{
+    if(is.null(input$directoratep1)){ disable("change1p1"); disable("change2p1")}
+    else{ enable("change1p1"); enable("change2p1") }})
+  observeEvent(input$directoratep4,ignoreNULL=FALSE,{
+    if(is.null(input$directoratep4)){ disable("change1p4"); disable("change2p4")}
+    else{ enable("change1p4"); enable("change2p4") }})
   
   # ---- Plot outputs ---------------------------------------------------------
   

@@ -1,0 +1,70 @@
+
+/* ~~~~~~~~~~~~ STYLESHEET ~~~~~~~~~~~~~ */
+
+#loadingscrn {
+  position: absolute;
+  background: #3c8dbc;
+  opacity: 0.9;
+  z-index: 100;
+  left: 0;
+  right: 0;
+  height: 100%;
+  text-align: center;
+  color: #ffffff;
+}
+
+#selecteng, #selectfr {
+  margin: 50px 5px 60px 5px;
+  color: #444444;
+  font-size: 20px;
+}
+
+#language+ div>.selectize-dropdown {
+  background: #1e272c;
+  color: #ffffff;
+  margin-left: 20px
+}
+
+#language+ div>.selectize-input {
+  background: #1e272c;
+  color: #ffffff;
+  border-color: #1e272c;
+  width: 160px;
+  margin: 10px 0px 0px 20px;
+}
+
+#language+ div>.selectize-input:after {
+  right: 10px;
+  border: 6px solid transparent;
+  border-color: #fff transparent transparent transparent;
+}
+
+#change2p1, #change2p4 {
+  border-radius: 5px;
+}
+
+td {
+  padding-left: 0px;
+  padding-right: 10px;
+}
+
+.textlabel {
+  text-align: right;
+  padding-bottom: 25px;
+}
+
+.textlabel2 {
+  text-align: left;
+  padding-bottom: 25px;
+  padding-left: 3px;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

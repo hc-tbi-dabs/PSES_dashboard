@@ -5,85 +5,13 @@ library(shiny)
 library(shinydashboard)
 library(shinyjs)
 library(shinycssloaders)
+library(dplyr)
 
 ## ~~~~ Data files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 themes <- read.csv(
   "data/lookups/PSES_SAFF-Themes_Thèmes.csv", header=TRUE, encoding="UTF-8",
   col.names=c("THEME_ID","THEME_EN","THEME_FR"), stringsAsFactors=FALSE)
-
-## ~~~~ CSS formatting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-appCSS <- "
-#loadingscrn {
-  position: absolute;
-  background: #3c8dbc;
-  opacity: 0.9;
-  z-index: 100;
-  left: 0;
-  right: 0;
-  height: 100%;
-  text-align: center;
-  color: #ffffff;
-}
-
-#selecteng, #selectfr {
-  margin: 50px 5px 60px 5px;
-  color: #444444;
-  font-size: 20px;
-}
-
-#language+ div>.selectize-dropdown {
-  background: #1e272c;
-  color: #ffffff;
-  margin-left: 20px
-}
-
-#language+ div>.selectize-input {
-  background: #1e272c;
-  color: #ffffff;
-  border-color: #1e272c;
-  width: 160px;
-  margin: 10px 0px 0px 20px;
-}
-
-#language+ div>.selectize-input:after {
-  right: 10px;
-  border: 6px solid transparent;
-  border-color: #fff transparent transparent transparent;
-}"
-
-## ~~~~ Shinyjs functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-jscode <- "
-shinyjs.toTop = function() {
-  window.scrollTo(0, 0);
-}
-
-shinyjs.showEng = function() {
-  $('body').find('.sidebar-menu').find('[data-value=compare_en]').show();
-  $('body').find('.sidebar-menu').find('[data-value=full_en]').show();
-  $('body').find('.sidebar-menu').find('[data-value=about_en]').show();
-  $('body').find('.sidebar-menu').find('[data-value=compare_fr]').hide();
-  $('body').find('.sidebar-menu').find('[data-value=full_fr]').hide();
-  $('body').find('.sidebar-menu').find('[data-value=about_fr]').hide();
-  $('body').find('.sidebar-menu').find('[data-value=compare_en]').click();
-}
-
-shinyjs.showFr = function() {
-  $('body').find('.sidebar-menu').find('[data-value=compare_en]').hide();
-  $('body').find('.sidebar-menu').find('[data-value=full_en]').hide();
-  $('body').find('.sidebar-menu').find('[data-value=about_en]').hide();
-  $('body').find('.sidebar-menu').find('[data-value=compare_fr]').show();
-  $('body').find('.sidebar-menu').find('[data-value=full_fr]').show();
-  $('body').find('.sidebar-menu').find('[data-value=about_fr]').show();
-  $('body').find('.sidebar-menu').find('[data-value=compare_fr]').click();
-}
-
-shinyjs.showMainContent = function() {
-  $('body').find('#loadingscrn').hide();
-  $('body').find('#mainscrn').show();
-}"
 
 ## ~~~~ Dashboard components (header, sidebar, body) ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -112,7 +40,40 @@ body <- dashboardBody(
       fluidPage(
         titlePanel("Compare Data for ROEB"),
         fluidRow(
-        ))),
+          id="selectorp1",
+          style="margin:30px 30px 10px 30px;",
+          tags$table(
+            tags$tr(
+              tags$td(class="textlabel",strong("Compare against:")),
+              tags$td(selectInput(inputId="againstp1",label=NULL,c("2018"="2018","2017"="2017"),width="90px"))
+            ),
+            tags$tr(
+              tags$td(class="textlabel",strong("Directorates:")),
+              tags$td(colspan=5,uiOutput(outputId="dir_outputp1"))
+            ),
+            tags$tr(
+              tags$td(class="textlabel",strong("Theme:")),
+              tags$td(colspan=5,selectInput(inputId="themep1",label=NULL,themes$THEME_EN,width="600px"))
+            ),
+            tags$tr(
+              tags$td(class="textlabel",strong("Change with respect to:"),width="120px"),
+              tags$td(uiOutput(outputId="chng1_outputp1")),
+              tags$td(class="textlabel2",strong("of at least +/-"),width="95px"),
+              tags$td(style="padding-left:5px; padding-bottom:5px;",numericInput(inputId="change2p1",label=NULL,value=0,min=0,step=1,width="42px")),
+              tags$td(class="textlabel2",strong("% in"),width="48px"),
+              tags$td(uiOutput(outputId="chng3_outputp1"))
+            ),
+            tags$tr(
+              tags$td(class="textlabel",strong("Question:")),
+              tags$td(colspan=5,
+                      selectInput(inputId="questionp1",label=NULL,c("None"="none"),width="600px")) # should be dynamic to all above criteria
+            ),
+            tags$tr(tags$td(colspan=6,p(""))),
+            tags$tr(
+              tags$td(),
+              tags$td(colspan=3,actionButton(inputId="retrievep1",label="Retrieve data",style="border-radius:5px;")),
+              tags$td(colspan=2)
+            ))))),
     tabItem(
       tabName="full_en",
       fluidPage(
@@ -150,7 +111,40 @@ body <- dashboardBody(
       fluidPage(
         titlePanel("Comparer les données pour la DGORAL"),
         fluidRow(
-        ))),
+          id="selectorp4",
+          style="margin:30px 30px 10px 30px;",
+          tags$table(
+            tags$tr(
+              tags$td(class="textlabel",strong("Comparer contre:")),
+              tags$td(selectInput(inputId="againstp4",label=NULL,c("2018"="2018","2017"="2017"),width="90px"))
+            ),
+            tags$tr(
+              tags$td(class="textlabel",strong("Directions:")),
+              tags$td(colspan=5,uiOutput(outputId="dir_outputp4"))
+            ),
+            tags$tr(
+              tags$td(class="textlabel",strong("Thème:")),
+              tags$td(colspan=5,selectInput(inputId="themep4",label=NULL,themes$THEME_FR,width="629px"))
+            ),
+            tags$tr(
+              tags$td(class="textlabel",strong("Changement par rapport à (la):"),width="120px"),
+              tags$td(uiOutput(outputId="chng1_outputp4")),
+              tags$td(class="textlabel2",strong("d'au moins +/-"),width="102px"),
+              tags$td(style="padding-left:5px; padding-bottom:5px;",numericInput(inputId="change2p4",label=NULL,value=0,min=0,width="50px")),
+              tags$td(class="textlabel2",strong("% dans"),width="62px"),
+              tags$td(uiOutput(outputId="chng3_outputp4"))
+            ),
+            tags$tr(
+              tags$td(class="textlabel",strong("Question:")),
+              tags$td(colspan=5,
+                      selectInput(inputId="questionp4",label=NULL,c("Aucun"="aucun"),width="629px")) # should be dynamic to all above criteria
+            ),
+            tags$tr(tags$td(colspan=6,p(""))),
+            tags$tr(
+              tags$td(),
+              tags$td(colspan=3,actionButton(inputId="retrievep4",label="Rechercher les données",style="border-radius:5px;")),
+              tags$td(colspan=2)
+            ))))),
     tabItem(
       tabName="full_fr",
       fluidPage(
@@ -185,10 +179,12 @@ body <- dashboardBody(
           "pour en apprendre plus."
         )))))
 
+## ~~~~ Main UI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 ui <- tagList(
   useShinyjs(),
-  extendShinyjs(text=jscode),
-  inlineCSS(appCSS),
+  extendShinyjs("www/scripts.js"),
+  tags$link(rel="stylesheet",type="text/css",href="style.css"),
   div(id="mainscrn", style="display:none;", dashboardPage(title="PSES Results/Résultats du SAFF", header, sidebar, body)),
   div(
     id="loadingscrn",

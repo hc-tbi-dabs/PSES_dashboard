@@ -130,9 +130,14 @@ addToData <- function(tbl, ques, thm) {
   for(i in 1:nrow(tbl)) { d[i,"ORGANIZATION_FR"] <- as.character(units[units$UNIT_EN==tbl$Organization[i],"UNIT_FR"][1]) }
   d[,c("QUESTION_EN","QUESTION_FR")] <- data.frame(as.character(questions[questions$ID==qid,"EN"][1]), as.character(questions[questions$EN==ques,"FR"][1]))
   if("Positive answers(%)" %in% names(tbl)) {
-    d[,c("POSITIVE","NEGATIVE", "NEUTRAL")] <- data.frame(tbl$`Positive answers(%)`, tbl$`Negative answers(%)`, 100-tbl$`Positive answers(%)`-tbl$`Negative answers(%)`)
+    d[,c("POSITIVE","NEGATIVE","NEUTRAL")] <- data.frame(tbl$`Positive answers(%)`, tbl$`Negative answers(%)`, 100-tbl$`Positive answers(%)`-tbl$`Negative answers(%)`)
     for(i in 1:7) { d[,paste0("ANSWER",i)] <- tbl[,i+2] } }
-  else { for(i in 1:(ncol(tbl)-3)) { d[,paste0("ANSWER",i)] <- tbl[,i+2] } }
+  else {
+    for(i in 1:(ncol(tbl)-3)) { d[,paste0("ANSWER",i)] <- tbl[,i+2] }
+    if(ncol(tbl)-3==1) { d[,"ANSWER2"] <- 100-d[,"ANSWER1"] }
+    if(questions[questions$ID==qid,"ANS_TYPE"][1] %in% c(4,6) & questions[questions$ID==qid,"IS_REV"][1]) {
+      d[,c("POSITIVE","NEGATIVE")] <- d[,c("ANSWER2","ANSWER1")]; d[,"NEUTRAL"] <- 100-d[,"POSITIVE"]-d[,"NEGATIVE"] }
+    else { d[,c("POSITIVE","NEGATIVE")] <- d[,c("ANSWER1","ANSWER2")]; d[,"NEUTRAL"] <- 100-d[,"POSITIVE"]-d[,"NEGATIVE"] }}
   
   rbind(data,d)
 }
