@@ -6,6 +6,7 @@ library(shinydashboard)
 library(shinyjs)
 library(shinycssloaders)
 library(dplyr)
+options(warn=-1)
 
 ## ~~~~ Data files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -65,8 +66,7 @@ body <- dashboardBody(
             ),
             tags$tr(
               tags$td(class="textlabel",strong("Question:")),
-              tags$td(colspan=5,
-                      selectInput(inputId="questionp1",label=NULL,c("None"="none"),width="600px")) # should be dynamic to all above criteria
+              tags$td(colspan=5,uiOutput(outputId="ques_outputp1"))
             ),
             tags$tr(tags$td(colspan=6,p(""))),
             tags$tr(
@@ -136,8 +136,7 @@ body <- dashboardBody(
             ),
             tags$tr(
               tags$td(class="textlabel",strong("Question:")),
-              tags$td(colspan=5,
-                      selectInput(inputId="questionp4",label=NULL,c("Aucun"="aucun"),width="629px")) # should be dynamic to all above criteria
+              tags$td(colspan=5,uiOutput(outputId="ques_outputp4"))
             ),
             tags$tr(tags$td(colspan=6,p(""))),
             tags$tr(

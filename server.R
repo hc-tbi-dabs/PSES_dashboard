@@ -91,6 +91,112 @@ server <- function(input, output, session) {
     if(is.null(input$directoratep4)){ disabled(selectInput(inputId="change3p4",label=NULL,vals)) }
     else{ selectInput(inputId="change3p4",label=NULL,vals) }
   })
+  output$ques_outputp1 <- renderUI({
+    req(input$directoratep1)
+    req(input$change1p1)
+    req(input$change3p1)
+    data.f <- data[data$SURVEYR %in% c(2019,input$againstp1) & data$ORGANIZATION_EN %in% c("ROEB",input$directoratep1) & data$THEME_EN==input$themep1,]
+    allqs <- as.character(unique(data.f$QUESTION_EN))
+    qs <- c()
+    for(q in allqs) {
+      if(!(q %in% data.f[data.f$SURVEYR==2019,"QUESTION_EN"]) | !(q %in% data.f[data.f$SURVEYR==input$againstp1,"QUESTION_EN"])){ next }
+      if(input$change1p1=="ROEB" & input$change3p1!="any") {
+        res <- data.f[data.f$SURVEYR==2019 & data.f$ORGANIZATION_EN %in% c("ROEB",input$change3p1) & data.f$QUESTION_EN==q,]
+        if(is.na(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"]) | is.na(res[res$ORGANIZATION_EN==input$change3p1,"POSITIVE"]) | abs(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"]-res[res$ORGANIZATION_EN==input$change3p1,"POSITIVE"]) < input$change2p1){ next }}
+      else if(input$change1p1=="ROEB"){
+        res <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_EN==q,]
+        greaterThanMin <- FALSE
+        for(dir in input$directoratep1) {
+          if(!is.na(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"]) & !is.na(res[res$ORGANIZATION_EN==dir,"POSITIVE"]) & abs(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"]-res[res$ORGANIZATION_EN==dir,"POSITIVE"])>=input$change2p1){ greaterThanMin <- TRUE; break }}
+        if(!greaterThanMin){ next }}
+      else if(input$change3p1!="any") {
+        res <- data.f[data.f$ORGANIZATION_EN==input$change3p1 & data.f$QUESTION_EN==q,]
+        if(is.na(res[res$SURVEYR==2019,"POSITIVE"]) | is.na(res[res$SURVEYR==input$againstp1,"POSITIVE"]) | abs(res[res$SURVEYR==2019,"POSITIVE"]-res[res$SURVEYR==input$againstp1,"POSITIVE"])<input$change2p1){ next }}
+      else {
+        res <- data.f[data.f$ORGANIZATION_EN %in% input$directoratep1 & data.f$QUESTION_EN==q,]
+        greaterThanMin <- FALSE
+        for(dir in input$directoratep1) {
+          if(!is.na(res[res$SURVEYR==2019 & res$ORGANIZATION_EN==dir,"POSITIVE"]) & !is.na(res[res$SURVEYR==input$againstp1 & res$ORGANIZATION_EN==dir,"POSITIVE"]) & abs(res[res$SURVEYR==2019 & res$ORGANIZATION_EN==dir,"POSITIVE"]-res[res$SURVEYR==input$againstp1 & res$ORGANIZATION_EN==dir,"POSITIVE"])>=input$change2p1){ greaterThanMin <- TRUE; break }}
+        if(!greaterThanMin){ next }}
+      qs <- c(qs,q) }
+    
+    if(input$change1p1=="ROEB" & input$change3p1!="any") {
+      res <- data.f[data.f$SURVEYR==2019 & data.f$ORGANIZATION_EN %in% c("ROEB",input$change3p1) & data.f$QUESTION_EN %in% qs,]
+      avg1 <- mean(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"], na.rm=TRUE)
+      avg2 <- mean(res[res$ORGANIZATION_EN==input$change3p1,"POSITIVE"], na.rm=TRUE)
+      if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0) >= input$change2p1){ qs <- c("All questions (averaged)",qs) }}
+    else if(input$change1p1=="ROEB"){
+      res <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_EN %in% qs,]
+      avg1 <- mean(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"], na.rm=TRUE)
+      for(dir in input$directoratep1) {
+        avg2 <- mean(res[res$ORGANIZATION_EN==dir,"POSITIVE"], na.rm=TRUE)
+        if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0)>=input$change2p1){ qs <- c("All questions (averaged)",qs); break }}}
+    else if(input$change3p1!="any") {
+      res <- data.f[data.f$ORGANIZATION_EN==input$change3p1 & data.f$QUESTION_EN %in% qs,]
+      avg1 <- mean(res[res$SURVEYR==2019,"POSITIVE"], na.rm=TRUE)
+      avg2 <- mean(res[res$SURVEYR==input$againstp1,"POSITIVE"], na.rm=TRUE)
+      if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0) >= input$change2p1){ qs <- c("All questions (averaged)",qs) }}
+    else {
+      res <- data.f[data.f$ORGANIZATION_EN %in% input$directoratep1 & data.f$QUESTION_EN %in% qs,]
+      for(dir in input$directoratep1) {
+        avg1 <- mean(res[res$SURVEYR==2019 & res$ORGANIZATION_EN==dir,"POSITIVE"], na.rm=TRUE)
+        avg2 <- mean(res[res$SURVEYR==2018 & res$ORGANIZATION_EN==dir,"POSITIVE"], na.rm=TRUE)
+        if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0) >= input$change2p1){ qs <- c("All questions (averaged)",qs); break }}}
+    selectInput(inputId="questionp1",label=NULL,qs,width="600px")
+  })
+  output$ques_outputp4 <- renderUI({
+    req(input$directoratep4)
+    req(input$change1p4)
+    req(input$change3p4)
+    data.f <- data[data$SURVEYR %in% c(2019,input$againstp4) & data$ORGANIZATION_FR %in% c("DGORAL",input$directoratep4) & data$THEME_FR==input$themep4,]
+    allqs <- as.character(unique(data.f$QUESTION_FR))
+    qs <- c()
+    for(q in allqs) {
+      if(!(q %in% data.f[data.f$SURVEYR==2019,"QUESTION_FR"]) | !(q %in% data.f[data.f$SURVEYR==input$againstp4,"QUESTION_FR"])){ next }
+      if(input$change1p4=="DGORAL" & input$change3p4!="any") {
+        res <- data.f[data.f$SURVEYR==2019 & data.f$ORGANIZATION_FR %in% c("DGORAL",input$change3p4) & data.f$QUESTION_FR==q,]
+        if(is.na(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"]) | is.na(res[res$ORGANIZATION_FR==input$change3p4,"POSITIVE"]) | abs(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"]-res[res$ORGANIZATION_FR==input$change3p4,"POSITIVE"])<input$change2p4){ next }}
+      else if(input$change1p4=="DGORAL"){
+        res <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_FR==q,]
+        greaterThanMin <- FALSE
+        for(dir in input$directoratep4) {
+          if(!is.na(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"]) & !is.na(res[res$ORGANIZATION_FR==dir,"POSITIVE"]) & abs(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"]-res[res$ORGANIZATION_FR==dir,"POSITIVE"])>=input$change2p4){ greaterThanMin <- TRUE; break }}
+        if(!greaterThanMin){ next }}
+      else if(input$change3p4!="any") {
+        res <- data.f[data.f$ORGANIZATION_FR==input$change3p4 & data.f$QUESTION_FR==q,]
+        if(is.na(res[res$SURVEYR==2019,"POSITIVE"]) | is.na(res[res$SURVEYR==input$againstp4,"POSITIVE"]) | abs(res[res$SURVEYR==2019,"POSITIVE"]-res[res$SURVEYR==input$againstp4,"POSITIVE"])<input$change2p4){ next }}
+      else {
+        res <- data.f[data.f$ORGANIZATION_FR %in% input$directoratep4 & data.f$QUESTION_FR==q,]
+        greaterThanMin <- FALSE
+        for(dir in input$directoratep4) {
+          if(!is.na(res[res$SURVEYR==2019 & res$ORGANIZATION_FR==dir,"POSITIVE"]) & !is.na(res[res$SURVEYR==input$againstp4 & res$ORGANIZATION_FR==dir,"POSITIVE"]) & abs(res[res$SURVEYR==2019 & res$ORGANIZATION_FR==dir,"POSITIVE"]-res[res$SURVEYR==input$againstp4 & res$ORGANIZATION_FR==dir,"POSITIVE"])>=input$change2p4){ greaterThanMin <- TRUE; break }}
+        if(!greaterThanMin){ next }}
+      qs <- c(qs,q) }
+    
+    if(input$change1p4=="DGORAL" & input$change3p4!="any") {
+      res <- data.f[data.f$SURVEYR==2019 & data.f$ORGANIZATION_FR %in% c("DGORAL",input$change3p4) & data.f$QUESTION_FR %in% qs,]
+      avg1 <- mean(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"], na.rm=TRUE)
+      avg2 <- mean(res[res$ORGANIZATION_FR==input$change3p4,"POSITIVE"], na.rm=TRUE)
+      if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0) >= input$change2p4){ qs <- c("Toutes questions (moyennées)",qs) }}
+    else if(input$change1p4=="DGORAL"){
+      res <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_FR %in% qs,]
+      avg1 <- mean(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"], na.rm=TRUE)
+      for(dir in input$directoratep4) {
+        avg2 <- mean(res[res$ORGANIZATION_FR==dir,"POSITIVE"], na.rm=TRUE)
+        if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0)>=input$change2p4){ qs <- c("Toutes questions (moyennées)",qs); break }}}
+    else if(input$change3p4!="any") {
+      res <- data.f[data.f$ORGANIZATION_FR==input$change3p4 & data.f$QUESTION_FR %in% qs,]
+      avg1 <- mean(res[res$SURVEYR==2019,"POSITIVE"], na.rm=TRUE)
+      avg2 <- mean(res[res$SURVEYR==input$againstp4,"POSITIVE"], na.rm=TRUE)
+      if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0) >= input$change2p4){ qs <- c("Toutes questions (moyennées)",qs) }}
+    else {
+      res <- data.f[data.f$ORGANIZATION_FR %in% input$directoratep4 & data.f$QUESTION_FR %in% qs,]
+      for(dir in input$directoratep4) {
+        avg1 <- mean(res[res$SURVEYR==2019 & res$ORGANIZATION_FR==dir,"POSITIVE"], na.rm=TRUE)
+        avg2 <- mean(res[res$SURVEYR==2018 & res$ORGANIZATION_FR==dir,"POSITIVE"], na.rm=TRUE)
+        if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0) >= input$change2p4){ qs <- c("Toutes questions (moyennées)",qs); break }}}
+    selectInput(inputId="questionp4",label=NULL,qs,width="629px")
+  })
   
   # ---- Individual observers -------------------------------------------------
   

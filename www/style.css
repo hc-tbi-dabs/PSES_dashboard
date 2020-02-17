@@ -30,7 +30,7 @@
   color: #ffffff;
   border-color: #1e272c;
   width: 160px;
-  margin: 10px 0px 0px 20px;
+  margin: 10px 0 0 20px;
 }
 
 #language+ div>.selectize-input:after {
@@ -44,7 +44,7 @@
 }
 
 td {
-  padding-left: 0px;
+  padding-left: 0;
   padding-right: 10px;
 }
 

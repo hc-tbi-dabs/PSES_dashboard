@@ -3,7 +3,7 @@
 
 shinyjs.toTop = function() {
   window.scrollTo(0, 0);
-}
+};
 
 shinyjs.showEng = function() {
   $('body').find('.sidebar-menu').find('[data-value=compare_en]').show();
@@ -13,7 +13,7 @@ shinyjs.showEng = function() {
   $('body').find('.sidebar-menu').find('[data-value=full_fr]').hide();
   $('body').find('.sidebar-menu').find('[data-value=about_fr]').hide();
   $('body').find('.sidebar-menu').find('[data-value=compare_en]').click();
-}
+};
 
 shinyjs.showFr = function() {
   $('body').find('.sidebar-menu').find('[data-value=compare_en]').hide();
@@ -23,9 +23,9 @@ shinyjs.showFr = function() {
   $('body').find('.sidebar-menu').find('[data-value=full_fr]').show();
   $('body').find('.sidebar-menu').find('[data-value=about_fr]').show();
   $('body').find('.sidebar-menu').find('[data-value=compare_fr]').click();
-}
+};
 
 shinyjs.showMainContent = function() {
   $('body').find('#loadingscrn').hide();
   $('body').find('#mainscrn').show();
-}
+};
