@@ -92,62 +92,60 @@ server <- function(input, output, session) {
     else{ selectInput(inputId="change3p4",label=NULL,vals) }
   })
   output$ques_outputp1 <- renderUI({
-    req(input$directoratep1)
-    req(input$change1p1)
-    req(input$change3p1)
-    data.f <- data[data$SURVEYR %in% c(2019,input$againstp1) & data$ORGANIZATION_EN %in% c("ROEB",input$directoratep1) & data$THEME_EN==input$themep1,]
-    allqs <- as.character(unique(data.f$QUESTION_EN))
-    qs <- c()
-    for(q in allqs) {
-      if(!(q %in% data.f[data.f$SURVEYR==2019,"QUESTION_EN"]) | !(q %in% data.f[data.f$SURVEYR==input$againstp1,"QUESTION_EN"])){ next }
+    if(is.null(input$directoratep1) | is.null(input$change1p1) | is.null(input$change3p1)){ disabled(selectInput(inputId="questionp1",label=NULL,c(),width="600px")) }
+    else{
+      data.f <- data[data$SURVEYR %in% c(2019,input$againstp1) & data$ORGANIZATION_EN %in% c("ROEB",input$directoratep1) & data$THEME_EN==input$themep1,]
+      allqs <- as.character(unique(data.f$QUESTION_EN))
+      qs <- c()
+      for(q in allqs) {
+        if(!(q %in% data.f[data.f$SURVEYR==2019,"QUESTION_EN"]) | !(q %in% data.f[data.f$SURVEYR==input$againstp1,"QUESTION_EN"])){ next }
+        if(input$change1p1=="ROEB" & input$change3p1!="any") {
+          res <- data.f[data.f$SURVEYR==2019 & data.f$ORGANIZATION_EN %in% c("ROEB",input$change3p1) & data.f$QUESTION_EN==q,]
+          if(is.na(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"]) | is.na(res[res$ORGANIZATION_EN==input$change3p1,"POSITIVE"]) | abs(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"]-res[res$ORGANIZATION_EN==input$change3p1,"POSITIVE"]) < input$change2p1){ next }}
+        else if(input$change1p1=="ROEB"){
+          res <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_EN==q,]
+          greaterThanMin <- FALSE
+          for(dir in input$directoratep1) {
+            if(!is.na(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"]) & !is.na(res[res$ORGANIZATION_EN==dir,"POSITIVE"]) & abs(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"]-res[res$ORGANIZATION_EN==dir,"POSITIVE"])>=input$change2p1){ greaterThanMin <- TRUE; break }}
+          if(!greaterThanMin){ next }}
+        else if(input$change3p1!="any") {
+          res <- data.f[data.f$ORGANIZATION_EN==input$change3p1 & data.f$QUESTION_EN==q,]
+          if(is.na(res[res$SURVEYR==2019,"POSITIVE"]) | is.na(res[res$SURVEYR==input$againstp1,"POSITIVE"]) | abs(res[res$SURVEYR==2019,"POSITIVE"]-res[res$SURVEYR==input$againstp1,"POSITIVE"])<input$change2p1){ next }}
+        else {
+          res <- data.f[data.f$ORGANIZATION_EN %in% input$directoratep1 & data.f$QUESTION_EN==q,]
+          greaterThanMin <- FALSE
+          for(dir in input$directoratep1) {
+            if(!is.na(res[res$SURVEYR==2019 & res$ORGANIZATION_EN==dir,"POSITIVE"]) & !is.na(res[res$SURVEYR==input$againstp1 & res$ORGANIZATION_EN==dir,"POSITIVE"]) & abs(res[res$SURVEYR==2019 & res$ORGANIZATION_EN==dir,"POSITIVE"]-res[res$SURVEYR==input$againstp1 & res$ORGANIZATION_EN==dir,"POSITIVE"])>=input$change2p1){ greaterThanMin <- TRUE; break }}
+          if(!greaterThanMin){ next }}
+        qs <- c(qs,q) }
+      
       if(input$change1p1=="ROEB" & input$change3p1!="any") {
-        res <- data.f[data.f$SURVEYR==2019 & data.f$ORGANIZATION_EN %in% c("ROEB",input$change3p1) & data.f$QUESTION_EN==q,]
-        if(is.na(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"]) | is.na(res[res$ORGANIZATION_EN==input$change3p1,"POSITIVE"]) | abs(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"]-res[res$ORGANIZATION_EN==input$change3p1,"POSITIVE"]) < input$change2p1){ next }}
+        res <- data.f[data.f$SURVEYR==2019 & data.f$ORGANIZATION_EN %in% c("ROEB",input$change3p1) & data.f$QUESTION_EN %in% qs,]
+        avg1 <- mean(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"], na.rm=TRUE)
+        avg2 <- mean(res[res$ORGANIZATION_EN==input$change3p1,"POSITIVE"], na.rm=TRUE)
+        if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0) >= input$change2p1){ qs <- c("All questions (averaged)",qs) }}
       else if(input$change1p1=="ROEB"){
-        res <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_EN==q,]
-        greaterThanMin <- FALSE
+        res <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_EN %in% qs,]
+        avg1 <- mean(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"], na.rm=TRUE)
         for(dir in input$directoratep1) {
-          if(!is.na(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"]) & !is.na(res[res$ORGANIZATION_EN==dir,"POSITIVE"]) & abs(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"]-res[res$ORGANIZATION_EN==dir,"POSITIVE"])>=input$change2p1){ greaterThanMin <- TRUE; break }}
-        if(!greaterThanMin){ next }}
+          avg2 <- mean(res[res$ORGANIZATION_EN==dir,"POSITIVE"], na.rm=TRUE)
+          if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0)>=input$change2p1){ qs <- c("All questions (averaged)",qs); break }}}
       else if(input$change3p1!="any") {
-        res <- data.f[data.f$ORGANIZATION_EN==input$change3p1 & data.f$QUESTION_EN==q,]
-        if(is.na(res[res$SURVEYR==2019,"POSITIVE"]) | is.na(res[res$SURVEYR==input$againstp1,"POSITIVE"]) | abs(res[res$SURVEYR==2019,"POSITIVE"]-res[res$SURVEYR==input$againstp1,"POSITIVE"])<input$change2p1){ next }}
+        res <- data.f[data.f$ORGANIZATION_EN==input$change3p1 & data.f$QUESTION_EN %in% qs,]
+        avg1 <- mean(res[res$SURVEYR==2019,"POSITIVE"], na.rm=TRUE)
+        avg2 <- mean(res[res$SURVEYR==input$againstp1,"POSITIVE"], na.rm=TRUE)
+        if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0) >= input$change2p1){ qs <- c("All questions (averaged)",qs) }}
       else {
-        res <- data.f[data.f$ORGANIZATION_EN %in% input$directoratep1 & data.f$QUESTION_EN==q,]
-        greaterThanMin <- FALSE
+        res <- data.f[data.f$ORGANIZATION_EN %in% input$directoratep1 & data.f$QUESTION_EN %in% qs,]
         for(dir in input$directoratep1) {
-          if(!is.na(res[res$SURVEYR==2019 & res$ORGANIZATION_EN==dir,"POSITIVE"]) & !is.na(res[res$SURVEYR==input$againstp1 & res$ORGANIZATION_EN==dir,"POSITIVE"]) & abs(res[res$SURVEYR==2019 & res$ORGANIZATION_EN==dir,"POSITIVE"]-res[res$SURVEYR==input$againstp1 & res$ORGANIZATION_EN==dir,"POSITIVE"])>=input$change2p1){ greaterThanMin <- TRUE; break }}
-        if(!greaterThanMin){ next }}
-      qs <- c(qs,q) }
-    
-    if(input$change1p1=="ROEB" & input$change3p1!="any") {
-      res <- data.f[data.f$SURVEYR==2019 & data.f$ORGANIZATION_EN %in% c("ROEB",input$change3p1) & data.f$QUESTION_EN %in% qs,]
-      avg1 <- mean(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"], na.rm=TRUE)
-      avg2 <- mean(res[res$ORGANIZATION_EN==input$change3p1,"POSITIVE"], na.rm=TRUE)
-      if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0) >= input$change2p1){ qs <- c("All questions (averaged)",qs) }}
-    else if(input$change1p1=="ROEB"){
-      res <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_EN %in% qs,]
-      avg1 <- mean(res[res$ORGANIZATION_EN=="ROEB","POSITIVE"], na.rm=TRUE)
-      for(dir in input$directoratep1) {
-        avg2 <- mean(res[res$ORGANIZATION_EN==dir,"POSITIVE"], na.rm=TRUE)
-        if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0)>=input$change2p1){ qs <- c("All questions (averaged)",qs); break }}}
-    else if(input$change3p1!="any") {
-      res <- data.f[data.f$ORGANIZATION_EN==input$change3p1 & data.f$QUESTION_EN %in% qs,]
-      avg1 <- mean(res[res$SURVEYR==2019,"POSITIVE"], na.rm=TRUE)
-      avg2 <- mean(res[res$SURVEYR==input$againstp1,"POSITIVE"], na.rm=TRUE)
-      if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0) >= input$change2p1){ qs <- c("All questions (averaged)",qs) }}
-    else {
-      res <- data.f[data.f$ORGANIZATION_EN %in% input$directoratep1 & data.f$QUESTION_EN %in% qs,]
-      for(dir in input$directoratep1) {
-        avg1 <- mean(res[res$SURVEYR==2019 & res$ORGANIZATION_EN==dir,"POSITIVE"], na.rm=TRUE)
-        avg2 <- mean(res[res$SURVEYR==2018 & res$ORGANIZATION_EN==dir,"POSITIVE"], na.rm=TRUE)
-        if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0) >= input$change2p1){ qs <- c("All questions (averaged)",qs); break }}}
-    selectInput(inputId="questionp1",label=NULL,qs,width="600px")
+          avg1 <- mean(res[res$SURVEYR==2019 & res$ORGANIZATION_EN==dir,"POSITIVE"], na.rm=TRUE)
+          avg2 <- mean(res[res$SURVEYR==2018 & res$ORGANIZATION_EN==dir,"POSITIVE"], na.rm=TRUE)
+          if(!is.nan(avg1) & !is.nan(avg2) & round(abs(avg1-avg2),0) >= input$change2p1){ qs <- c("All questions (averaged)",qs); break }}}
+      selectInput(inputId="questionp1",label=NULL,qs,width="600px")
+    }
   })
   output$ques_outputp4 <- renderUI({
-    req(input$directoratep4)
-    req(input$change1p4)
-    req(input$change3p4)
+    req(input$directoratep4,input$change1p4,input$change3p4)
     data.f <- data[data$SURVEYR %in% c(2019,input$againstp4) & data$ORGANIZATION_FR %in% c("DGORAL",input$directoratep4) & data$THEME_FR==input$themep4,]
     allqs <- as.character(unique(data.f$QUESTION_FR))
     qs <- c()
@@ -212,12 +210,139 @@ server <- function(input, output, session) {
   observeEvent(input$directoratep4,ignoreNULL=FALSE,{
     if(is.null(input$directoratep4)){ disable("change1p4"); disable("change2p4")}
     else{ enable("change1p4"); enable("change2p4") }})
+  observeEvent(input$retrievep1,{
+    req(input$questionp1)
+    output$resultsp1 <- renderUI({
+      isolate(
+        if(input$questionp1=="All questions (averaged)") {
+          dirs <- c("ROEB",input$directoratep1)
+          avgPos <- avgNeg <- avgNeut <- rep(NA,length(dirs))
+          avgPosOld <- avgNeutOld <- avgNegOld <- rep(NA,length(dirs))
+          data.f <- data[data$SURVEYR %in% c(2019,input$againstp1) & data$ORGANIZATION_EN %in% dirs & data$THEME_EN==input$themep1,]
+          allqs <- as.character(unique(data.f$QUESTION_EN))
+          qs <- c()
+          for(q in allqs) {
+            if(q %in% data.f[data.f$SURVEYR==2019,"QUESTION_EN"] & q %in% data.f[data.f$SURVEYR==input$againstp1,"QUESTION_EN"]){ qs <- c(qs,q) }}
+          
+          for(dir in dirs){
+            pos <- which(dirs==dir)
+            res <- data.f[data.f$SURVEYR==2019 & data.f$ORGANIZATION_EN==dir & data.f$QUESTION_EN %in% qs,c("POSITIVE","NEGATIVE")]
+            if(is.nan(mean(res$POSITIVE,na.rm=TRUE))){ avgPos[pos] <- NA } else{ avgPos[pos] <- round(mean(res$POSITIVE,na.rm=TRUE),0) }
+            if(is.nan(mean(res$NEGATIVE,na.rm=TRUE))){ avgNeg[pos] <- NA } else{ avgNeg[pos] <- round(mean(res$NEGATIVE,na.rm=TRUE),0) }
+            avgNeut[pos] <- 100-avgPos[pos]-avgNeg[pos]
+            res <- data.f[data.f$SURVEYR==input$againstp1 & data.f$ORGANIZATION_EN==dir & data.f$QUESTION_EN %in% qs,c("POSITIVE","NEGATIVE")]
+            if(is.nan(mean(res$POSITIVE,na.rm=TRUE))){ avgPosOld[pos] <- NA } else{ avgPosOld[pos] <- round(mean(res$POSITIVE,na.rm=TRUE),0) }
+            if(is.nan(mean(res$NEGATIVE,na.rm=TRUE))){ avgNegOld[pos] <- NA } else{ avgNegOld[pos] <- round(mean(res$NEGATIVE,na.rm=TRUE),0) }
+            avgNeutOld[pos] <- 100-avgPosOld[pos]-avgNegOld[pos]
+          }
+          d <- data.frame(SURVEYR=c(rep(2019,length(dirs)),rep(input$againstp1,length(dirs))), ORGANIZATION_EN=rep(dirs,2),
+                          POSITIVE=c(avgPos,avgPosOld), NEUTRAL=c(avgNeut,avgNeutOld), NEGATIVE=c(avgNeg,avgNegOld))
+        } else{
+          d <- data[data$SURVEYR %in% c(2019,input$againstp1) & data$ORGANIZATION_EN %in% c("ROEB",input$directoratep1) & data$QUESTION_EN==input$questionp1,
+                    c("SURVEYR","ORGANIZATION_EN","POSITIVE","NEUTRAL","NEGATIVE")]
+        })
+      isolate(d$ORGANIZATION_EN <- factor(d$ORGANIZATION_EN, levels=c("ROEB",input$directoratep1)))
+      d$SURVEYR <- as.character(d$SURVEYR)
+      d.m <- melt(d,c("ORGANIZATION_EN","SURVEYR"))
+      tagList(
+        isolate(h3(input$themep1)),
+        isolate(h5(input$questionp1)),
+        br(),
+        isolate(box(
+          status=NULL,solidHeader=TRUE,width=7,
+          renderPlot(height=195+111*length(input$directoratep1), {
+            ggplot(d.m, aes(x=SURVEYR,y=value,fill=variable)) +
+              geom_bar(stat="identity", position=position_stack(reverse=TRUE)) +
+              coord_flip() +
+              facet_grid(rows=vars(ORGANIZATION_EN)) +
+              theme_light() +
+              labs(x=NULL, y="%", fill="") +
+              scale_fill_manual(breaks=c("POSITIVE","NEUTRAL","NEGATIVE"), values=c("steelblue4","azure1","lightsalmon")) +
+              geom_text(size=3, position=position_stack(vjust=0.5,reverse=TRUE), aes(label=value)) +
+              theme(legend.position="top")
+          }))),
+        box(
+          status=NULL,solidHeader=TRUE,title="Trends",width=5
+          # IN PROGRESS! ---
+          # tagList(
+          #   div(
+          #     style="display:inline-block; width:45%; margin:5px 0 10px 10px;",
+          #     tags$table(
+          #       style="width:100%;",
+          #       tags$tr(
+          #         tags$td(class="trend",
+          #                 wellPanel(
+          #                   style="background-color:#0099cc; width:100%; height:112px;",
+          #                   div("Positive in 2019",style="color:#ffffff; font-size:10pt;"),
+          #                   div(tags$strong("77%",style="color:#ffffff; font-size:25pt;"),style="text-align:right;")))
+          #       ),
+          #       tags$tr(
+          #         tags$td(class="trend",
+          #                 wellPanel(
+          #                   style="background-color:#0099cc; width:100%; height:112px;",
+          #                   div("Positive in 2019",style="color:#ffffff; font-size:10pt;"),
+          #                   div(tags$strong("77%",style="color:#ffffff; font-size:25pt;"),style="text-align:right;")))
+          #       ),
+          #       tags$tr(
+          #         tags$td(class="trend",
+          #                 wellPanel(
+          #                   style="background-color:#0099cc; width:100%; height:112px;",
+          #                   div("Positive in 2019",style="color:#ffffff; font-size:10pt;"),
+          #                   div(tags$strong("77%",style="color:#ffffff; font-size:25pt;"),style="text-align:right;")))
+          #       ),
+          #       tags$tr(
+          #         tags$td(class="trend",
+          #                 wellPanel(
+          #                   style="background-color:#0099cc; width:100%; height:112px;",
+          #                   div("Positive in 2019",style="color:#ffffff; font-size:10pt;"),
+          #                   div(tags$strong("77%",style="color:#ffffff; font-size:25pt;"),style="text-align:right;")))
+          #       ),
+          #       tags$tr(
+          #         tags$td(class="trend",
+          #                 wellPanel(
+          #                   style="background-color:#0099cc; width:100%; height:112px;",
+          #                   div("Positive in 2019",style="color:#ffffff; font-size:10pt;"),
+          #                   div(tags$strong("77%",style="color:#ffffff; font-size:25pt;"),style="text-align:right;")))
+          #       ),
+          #       tags$tr(
+          #         tags$td(class="trend",
+          #                 wellPanel(
+          #                   style="background-color:#0099cc; width:100%; height:112px;",
+          #                   div("Positive in 2019",style="color:#ffffff; font-size:10pt;"),
+          #                   div(tags$strong("77%",style="color:#ffffff; font-size:25pt;"),style="text-align:right;")))
+          #       ),
+          #       tags$tr(
+          #         tags$td(class="trend",
+          #                 wellPanel(
+          #                   style="background-color:#0099cc; width:100%; height:112px;",
+          #                   div("Positive in 2019",style="color:#ffffff; font-size:10pt;"),
+          #                   div(tags$strong("77%",style="color:#ffffff; font-size:25pt;"),style="text-align:right;")))
+          #       ),
+          #       tags$tr(
+          #         tags$td(class="trend",
+          #                 wellPanel(
+          #                   style="background-color:#0099cc; width:100%; height:112px;",
+          #                   div("Positive in 2019",style="color:#ffffff; font-size:10pt;"),
+          #                   div(tags$strong("77%",style="color:#ffffff; font-size:25pt;"),style="text-align:right;")))
+          #       ),
+          #       tags$tr(
+          #         tags$td(class="trend",
+          #                 wellPanel(
+          #                   style="background-color:#0099cc; width:100%; height:112px;",
+          #                   div("Positive in 2019",style="color:#ffffff; font-size:10pt;"),
+          #                   div(tags$strong("77%",style="color:#ffffff; font-size:25pt;"),style="text-align:right;")))
+          #       )
+          #     ))
+          # )
+        )
+      )
+    })
+  })
   
   # ---- Plot outputs ---------------------------------------------------------
   
   output$graphsp2 <- renderUI({
-    req(input$yearp2)
-    req(input$themep2)
+    req(input$yearp2,input$themep2)
     data.f <- data[data$SURVEYR==input$yearp2 & data$THEME_EN==input$themep2,]
     
     qs <- as.character(unique(data.f$QID))

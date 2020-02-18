@@ -48,6 +48,12 @@ td {
   padding-right: 10px;
 }
 
+.well {
+  border-color: #ffffff;
+  margin: 0;
+  padding: 5;
+}
+
 .textlabel {
   text-align: right;
   padding-bottom: 25px;

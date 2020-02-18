@@ -73,7 +73,13 @@ body <- dashboardBody(
               tags$td(),
               tags$td(colspan=3,actionButton(inputId="retrievep1",label="Retrieve data",style="border-radius:5px;")),
               tags$td(colspan=2)
-            ))))),
+            ))),
+        fluidRow(
+          id="displayp1",
+          style="margin:30px 30px 10px 30px;",
+          uiOutput(outputId="resultsp1")
+        )
+        )),
     tabItem(
       tabName="full_en",
       fluidPage(
