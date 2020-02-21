@@ -48,6 +48,10 @@ td {
   padding-right: 10px;
 }
 
+.rightcol {
+  padding-right: 0;
+}
+
 .well {
   border-color: #ffffff;
   margin: 0;

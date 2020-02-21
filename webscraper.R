@@ -137,7 +137,7 @@ addToData <- function(tbl, ques, thm) {
     if(ncol(tbl)-3==1) { d[,"ANSWER2"] <- 100-d[,"ANSWER1"] }
     if(questions[questions$ID==qid,"ANS_TYPE"][1] %in% c(4,6) & questions[questions$ID==qid,"IS_REV"][1]) {
       d[,c("POSITIVE","NEGATIVE")] <- d[,c("ANSWER2","ANSWER1")]; d[,"NEUTRAL"] <- 100-d[,"POSITIVE"]-d[,"NEGATIVE"] }
-    else { d[,c("POSITIVE","NEGATIVE")] <- d[,c("ANSWER1","ANSWER2")]; d[,"NEUTRAL"] <- 100-d[,"POSITIVE"]-d[,"NEGATIVE"] }}
+    else if(questions[questions$ID==qid,"ANS_TYPE"][1] %in% c(4,6)) { d[,c("POSITIVE","NEGATIVE")] <- d[,c("ANSWER1","ANSWER2")]; d[,"NEUTRAL"] <- 100-d[,"POSITIVE"]-d[,"NEGATIVE"] }}
   
   rbind(data,d)
 }
