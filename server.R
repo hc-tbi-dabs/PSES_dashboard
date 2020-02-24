@@ -88,7 +88,7 @@ recolourBars <- function(q, p, lang) {
   
   if(atype %in% c(1,3,7)) {
     p <- p+scale_fill_manual(
-      breaks=ans.set,values=c("aliceblue","slategray4","slategray3","peachpuff",
+      breaks=ans.set,values=c("steelblue3","lightskyblue","azure1","peachpuff",
                               "lightsalmon","grey92","grey80")) }
   else if(atype==2 & is.reversed) {
     p <- p+scale_fill_manual(
@@ -718,30 +718,39 @@ server <- function(input, output, session) {
     qs <- as.character(unique(data.f$QID))
     lapply(qs, function(q) {
       qtitle <- as.character(questions[questions$ID==q,"EN"][1])
-      res <- data.f[data.f$QID==q,] # maybe add criterion !is.na(data$ANSWER1)
-      ans.set <- answers[,paste0("TYPE",questions[questions$ID==q,"ANS_TYPE"][1],"_EN")]
+      res <- data.f[data.f$QID==q,]
+      ans.set <-
+        answers[,paste0("TYPE",questions[questions$ID==q,"ANS_TYPE"][1],"_EN")]
       ans.set <- ans.set[ans.set!=""]
       
       v <- c()
       n <- length(ans.set)
-      for(s in paste0("ANSWER",1:n)) { v <- c(v,res[,s]) }
-      df <- structure(v, .Dim=c(nrow(res),n), .Dimnames=list(as.character(res$ORGANIZATION_EN), ans.set))
+      for(s in paste0("ANSWER",1:n)) {
+        v <- c(v,res[,s]) }
+      df <- structure(v,
+                      .Dim=c(nrow(res),n),
+                      .Dimnames=list(as.character(res$ORGANIZATION_EN),ans.set))
       df.m <- melt(df)
-      df.m <- rename(df.m, Unit=Var1, Responses=Var2, Proportion=value)
+      df.m <- rename(df.m,Unit=Var1,Responses=Var2,Proportion=value)
       
-      box(id=paste0("b",which(QIDS==q)), title=qtitle, status="primary", solidHeader=TRUE, width=12, collapsible=TRUE, collapsed=TRUE,
-          render_delayed({ p("(Percentages may not add to 100 due to rounding)") }), # keep?
-          renderPlot(height=400, {
+      box(id=paste0("b",which(QIDS==q)),title=qtitle,status="primary",
+          solidHeader=TRUE,width=12,collapsible=TRUE,collapsed=TRUE,
+          render_delayed({
+            p("(Percentages may not add to 100 due to rounding)")
+          }),
+          renderPlot(height=400,{
             p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
               geom_bar(stat="identity", position=position_stack(reverse=TRUE)) +
               labs(x="", y="Proportion responded (%)", fill="Responses") +
-              geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE), aes(label=Proportion)) +
+              geom_text(size=3, position=position_stack(vjust=0.5,reverse=TRUE),
+                        aes(label=Proportion)) +
               coord_flip() +
               theme_minimal()
             return(recolourBars(q,p,"en"))
           }),
           renderTable(rownames=TRUE, align="c", width="100%", {
-            dtb <- data.frame(as.list(rev(res$COUNT)), row.names="Number of responses")
+            dtb <- data.frame(as.list(rev(res$COUNT)),
+                              row.names="Number of responses")
             names(dtb) <- rev(as.character(res$ORGANIZATION_EN))
             return(dtb)
           }))
@@ -755,30 +764,40 @@ server <- function(input, output, session) {
     qs <- as.character(unique(data.f$QID))
     lapply(qs, function(q) {
       qtitle <- as.character(questions[questions$ID==q,"FR"][1])
-      res <- data.f[data.f$QID==q,] # maybe add criterion !is.na(data$ANSWER1)
-      ans.set <- answers[,paste0("TYPE",questions[questions$ID==q,"ANS_TYPE"][1],"_FR")]
+      res <- data.f[data.f$QID==q,]
+      ans.set <-
+        answers[,paste0("TYPE",questions[questions$ID==q,"ANS_TYPE"][1],"_FR")]
       ans.set <- ans.set[ans.set!=""]
       
       v <- c()
       n <- length(ans.set)
-      for(s in paste0("ANSWER",1:n)) { v <- c(v,res[,s]) }
-      df <- structure(v, .Dim=c(nrow(res),n), .Dimnames=list(as.character(res$ORGANIZATION_FR), ans.set))
+      for(s in paste0("ANSWER",1:n)) {
+        v <- c(v,res[,s]) }
+      df <- structure(v,
+                      .Dim=c(nrow(res),n),
+                      .Dimnames=list(as.character(res$ORGANIZATION_FR),ans.set))
       df.m <- melt(df)
-      df.m <- rename(df.m, Unit=Var1, Responses=Var2, Proportion=value)
+      df.m <- rename(df.m,Unit=Var1,Responses=Var2,Proportion=value)
       
-      box(id=paste0("b",which(QIDS==q)+N), title=qtitle, status="primary", solidHeader=TRUE, width=12, collapsible=TRUE, collapsed=TRUE,
-          render_delayed({ p("(Les pourcentages peuvent ne pas totaliser 100 en raison d'erreurs dans les arrondissements)") }), # keep?
-          renderPlot(height=400, {
+      box(id=paste0("b",which(QIDS==q)+N),title=qtitle,status="primary",
+          solidHeader=TRUE,width=12,collapsible=TRUE,collapsed=TRUE,
+          render_delayed({
+            p("(Les pourcentages peuvent ne pas totaliser 100 en raison
+              d'erreurs dans les arrondissements)")
+          }),
+          renderPlot(height=400,{
             p <- ggplot(df.m, aes(x=Unit, y=Proportion, fill=Responses)) +
               geom_bar(stat="identity", position=position_stack(reverse=TRUE)) +
               labs(x="", y="Pourcentage répondu (%)", fill="Réponses") +
-              geom_text(size=3, position=position_stack(vjust=0.5, reverse=TRUE), aes(label=Proportion)) +
+              geom_text(size=3, position=position_stack(vjust=0.5,reverse=TRUE),
+                        aes(label=Proportion)) +
               coord_flip() +
               theme_minimal()
             return(recolourBars(q,p,"fr"))
           }),
           renderTable(rownames=TRUE, align="c", width="100%", {
-            dtb <- data.frame(as.list(rev(res$COUNT)), row.names="Nombre de réponses")
+            dtb <- data.frame(as.list(rev(res$COUNT)),
+                              row.names="Nombre de réponses")
             names(dtb) <- rev(as.character(res$ORGANIZATION_FR))
             return(dtb)
           }))

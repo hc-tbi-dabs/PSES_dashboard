@@ -8,24 +8,27 @@ library(shinycssloaders)
 library(dplyr)
 options(warn=-1)
 
-## ~~~~ Data files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## ~~~~ Data files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 themes <- read.csv(
   "data/lookups/PSES_SAFF-Themes_Thèmes.csv", header=TRUE, encoding="UTF-8",
   col.names=c("THEME_ID","THEME_EN","THEME_FR"), stringsAsFactors=FALSE)
 
-## ~~~~ Dashboard components (header, sidebar, body) ~~~~~~~~~~~~~~~~~~~~~~~~~~
+## ~~~~ Dashboard components (header, sidebar, body) ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 header <- dashboardHeader(title = textOutput(outputId="title"))
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
     id="tabs",
-    menuItem("Compare Data", tabName="compare_en", icon=icon("project-diagram"), selected=TRUE),
+    menuItem("Compare Data", tabName="compare_en", icon=icon("project-diagram"),
+             selected=TRUE),
     menuItem("Full Results by Year", tabName="full_en", icon=icon("map")),
     menuItem("About PSES", tabName="about_en",icon=icon("question")),
-    menuItem("Comparer les données", tabName="compare_fr", icon=icon("project-diagram")),
-    menuItem("Résultats complets par année", tabName="full_fr", icon=icon("map")),
+    menuItem("Comparer les données", tabName="compare_fr",
+             icon=icon("project-diagram")),
+    menuItem("Résultats complets par année", tabName="full_fr",
+             icon=icon("map")),
     menuItem("À propos du SAFF", tabName="about_fr", icon=icon("question"))
   ),
   uiOutput(outputId="langselector"),
@@ -46,7 +49,8 @@ body <- dashboardBody(
           tags$table(
             tags$tr(
               tags$td(class="textlabel",strong("Compare against:")),
-              tags$td(selectInput(inputId="againstp1",label=NULL,c("2018"="2018","2017"="2017"),width="90px"))
+              tags$td(selectInput(inputId="againstp1",label=NULL,
+                                  c("2018"="2018","2017"="2017"),width="90px"))
             ),
             tags$tr(
               tags$td(class="textlabel",strong("Directorates:")),
@@ -54,13 +58,17 @@ body <- dashboardBody(
             ),
             tags$tr(
               tags$td(class="textlabel",strong("Theme:")),
-              tags$td(colspan=5,selectInput(inputId="themep1",label=NULL,themes$THEME_EN,width="600px"))
+              tags$td(colspan=5,selectInput(inputId="themep1",label=NULL,
+                                            themes$THEME_EN,width="600px"))
             ),
             tags$tr(
-              tags$td(class="textlabel",strong("Change with respect to:"),width="120px"),
+              tags$td(class="textlabel",strong("Change with respect to:"),
+                      width="120px"),
               tags$td(uiOutput(outputId="chng1_outputp1")),
               tags$td(class="textlabel2",strong("of at least +/-"),width="95px"),
-              tags$td(style="padding-left:5px; padding-bottom:5px;",numericInput(inputId="change2p1",label=NULL,value=0,min=0,step=1,width="42px")),
+              tags$td(style="padding-left:5px; padding-bottom:5px;",
+                      numericInput(inputId="change2p1",label=NULL,value=0,min=0,
+                                   step=1,width="42px")),
               tags$td(class="textlabel2",strong("% in"),width="48px"),
               tags$td(uiOutput(outputId="chng3_outputp1"))
             ),
@@ -71,7 +79,9 @@ body <- dashboardBody(
             tags$tr(tags$td(colspan=6,p(""))),
             tags$tr(
               tags$td(),
-              tags$td(colspan=3,actionButton(inputId="retrievep1",label="Retrieve data",style="border-radius:5px;")),
+              tags$td(colspan=3,
+                      actionButton(inputId="retrievep1",label="Retrieve data",
+                                   style="border-radius:5px;")),
               tags$td(colspan=2)
             ))),
         fluidRow(
@@ -89,10 +99,13 @@ body <- dashboardBody(
           style="margin:20px 30px 30px 30px;",
           div(
             style="display:inline-block;",
-            selectInput(inputId="yearp2",label="Year:",c("2019"="2019", "2018"="2018", "2017"="2017"),width="80px")),
+            selectInput(inputId="yearp2",label="Year:",
+                        c("2019"="2019","2018"="2018","2017"="2017"),
+                        width="80px")),
           div(
             style="display:inline-block; padding-left:5px;",
-            selectInput(inputId="themep2",label="Theme:",themes$THEME_EN,width="550px"))
+            selectInput(inputId="themep2",label="Theme:",themes$THEME_EN,
+                        width="550px"))
         ),
         fluidRow(
           uiOutput(outputId="graphsp2") %>% withSpinner(color="#777777")
@@ -122,7 +135,8 @@ body <- dashboardBody(
           tags$table(
             tags$tr(
               tags$td(class="textlabel",strong("Comparer contre:")),
-              tags$td(selectInput(inputId="againstp4",label=NULL,c("2018"="2018","2017"="2017"),width="90px"))
+              tags$td(selectInput(inputId="againstp4",label=NULL,
+                                  c("2018"="2018","2017"="2017"),width="90px"))
             ),
             tags$tr(
               tags$td(class="textlabel",strong("Directions:")),
@@ -130,13 +144,18 @@ body <- dashboardBody(
             ),
             tags$tr(
               tags$td(class="textlabel",strong("Thème:")),
-              tags$td(colspan=5,selectInput(inputId="themep4",label=NULL,themes$THEME_FR,width="629px"))
+              tags$td(colspan=5,selectInput(inputId="themep4",label=NULL,
+                                            themes$THEME_FR,width="629px"))
             ),
             tags$tr(
-              tags$td(class="textlabel",strong("Changement par rapport à (la):"),width="120px"),
+              tags$td(class="textlabel",
+                      strong("Changement par rapport à (la):"),width="120px"),
               tags$td(uiOutput(outputId="chng1_outputp4")),
-              tags$td(class="textlabel2",strong("d'au moins +/-"),width="102px"),
-              tags$td(style="padding-left:5px; padding-bottom:5px;",numericInput(inputId="change2p4",label=NULL,value=0,min=0,width="50px")),
+              tags$td(class="textlabel2",strong("d'au moins +/-"),
+                      width="102px"),
+              tags$td(style="padding-left:5px; padding-bottom:5px;",
+                      numericInput(inputId="change2p4",label=NULL,value=0,min=0,
+                                   width="50px")),
               tags$td(class="textlabel2",strong("% dans"),width="62px"),
               tags$td(uiOutput(outputId="chng3_outputp4"))
             ),
@@ -147,7 +166,10 @@ body <- dashboardBody(
             tags$tr(tags$td(colspan=6,p(""))),
             tags$tr(
               tags$td(),
-              tags$td(colspan=3,actionButton(inputId="retrievep4",label="Rechercher les données",style="border-radius:5px;")),
+              tags$td(colspan=3,
+                      actionButton(inputId="retrievep4",
+                                   label="Rechercher les données",
+                                   style="border-radius:5px;")),
               tags$td(colspan=2)
             ))))),
     tabItem(
@@ -159,10 +181,13 @@ body <- dashboardBody(
           style="margin:20px 30px 30px 30px;",
           div(
             style="display:inline-block;",
-            selectInput(inputId="yearp5",label="Année:",c("2019"="2019", "2018"="2018", "2017"="2017"),width="80px")),
+            selectInput(inputId="yearp5",label="Année:",
+                        c("2019"="2019","2018"="2018","2017"="2017"),
+                        width="80px")),
           div(
             style="display:inline-block; padding-left:5px;",
-            selectInput(inputId="themep5",label="Thème:",themes$THEME_FR,width="550px"))
+            selectInput(inputId="themep5",label="Thème:",themes$THEME_FR,
+                        width="550px"))
         ),
         fluidRow(
           uiOutput(outputId="graphsp5") %>% withSpinner(color="#777777")
@@ -184,13 +209,16 @@ body <- dashboardBody(
           "pour en apprendre plus."
         )))))
 
-## ~~~~ Main UI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## ~~~~ Main UI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ui <- tagList(
   useShinyjs(),
   extendShinyjs("www/scripts.js"),
   tags$link(rel="stylesheet",type="text/css",href="style.css"),
-  div(id="mainscrn", style="display:none;", dashboardPage(title="PSES Results/Résultats du SAFF", header, sidebar, body)),
+  div(id="mainscrn", style="display:none;",
+      dashboardPage(
+        title="PSES Results/Résultats du SAFF", header,sidebar,body
+      )),
   div(
     id="loadingscrn",
     fluidPage(
