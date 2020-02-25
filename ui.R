@@ -6,7 +6,6 @@ library(shinydashboard)
 library(shinyjs)
 library(shinycssloaders)
 library(dplyr)
-options(warn=-1)
 
 ## ~~~~ Data files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -115,9 +114,10 @@ body <- dashboardBody(
       fluidPage(
         titlePanel("About PSES"),
         p("The Public Service Employee Survey (PSES) is a survey conducted 
-          by the Treasury Board of Canada. Its objective is to measure the
-          opinions of federal public servants on their engagement, leadership,
-          workforce, workplace, workplace well-being and compensation."),
+          by the Treasury Board of Canada Secretariat. Its objective is to
+          measure the opinions of federal public servants on their engagement,
+          leadership, workforce, workplace, workplace well-being and
+          compensation."),
         p("Click",
           tags$a(href="https://www.canada.ca/en/treasury-board-secretariat/services/innovation/public-service-employee-survey.html",
                  style="",
@@ -171,7 +171,12 @@ body <- dashboardBody(
                                    label="Rechercher les données",
                                    style="border-radius:5px;")),
               tags$td(colspan=2)
-            ))))),
+            ))),
+        fluidRow(
+          id="displayp4",
+          style="margin:30px 30px 10px 30px;",
+          uiOutput(outputId="resultsp4")
+        ))),
     tabItem(
       tabName="full_fr",
       fluidPage(
@@ -197,10 +202,10 @@ body <- dashboardBody(
       fluidPage(
         titlePanel("À propos du SAFF"),
         p("Le Sondage auprès des fonctionnaires fédéraux (SAFF) est un sondage
-          mené par le Conseil du Trésor du Canada. Son objectif est de mesurer 
-          les opinions des fonctionnaires fédéraux concernant leur mobilisation,
-          le leadership, l’effectif, le milieu de travail, le bien-être en
-          milieu de travail et la rémunération."),
+          mené par le Secrétariat du Conseil du Trésor du Canada. Son objectif
+          est de mesurer les opinions des fonctionnaires fédéraux concernant
+          leur mobilisation, le leadership, l’effectif, le milieu de travail,
+          le bien-être en milieu de travail et la rémunération."),
         p("Cliquez",
           tags$a(href="https://www.canada.ca/fr/secretariat-conseil-tresor/services/innovation/sondage-fonctionnaires-federaux.html",
                   style="",
