@@ -10,6 +10,7 @@ library(ggplot2)
 library(plotly)
 library(reshape2)
 library(rmarkdown)
+options(warn=-1)
 
 ## ~~~~ Data Files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
