@@ -143,7 +143,7 @@ server <- function(input, output, session) {
   # ---- Dynamic content -------------------------------------------------------
   
   output$dir_outputp1 <- renderUI({
-    if(input$againstp1==2018) {
+    if(input$againstp1 %in% c(2019,2018)) {
       selectInput(inputId="directoratep1",label=NULL,multiple=TRUE,
                   width="600px",DIRECTORATES_EN,
                   selected=unname(DIRECTORATES_EN)) }
@@ -153,7 +153,9 @@ server <- function(input, output, session) {
                   selected=DIRECTORATES_EN[1:(length(DIRECTORATES_EN)-1)]) }
   })
   output$chng1_outputp1 <- renderUI({
-    if(input$againstp1==2018) {
+    if(input$againstp1==2019) {
+      selectInput(inputId="change1p1",label=NULL,c("ROEB"="ROEB"),width="90px")}
+    else if(input$againstp1==2018) {
       selectInput(inputId="change1p1",label=NULL,
                   c("ROEB"="ROEB","2018"="2018"),width="90px") }
     else {
@@ -171,7 +173,7 @@ server <- function(input, output, session) {
       selectInput(inputId="change3p1",label=NULL,vals) }
   })
   output$dir_outputp4 <- renderUI({
-    if(input$againstp4==2018) {
+    if(input$againstp4 %in% c(2019,2018)) {
       selectInput(inputId="directoratep4",label=NULL,multiple=TRUE,
                   width="629px",DIRECTORATES_FR,
                   selected=unname(DIRECTORATES_FR)) }
@@ -180,7 +182,10 @@ server <- function(input, output, session) {
                   width="629px",DIRECTORATES_FR[1:(length(DIRECTORATES_FR)-1)],
                   selected=DIRECTORATES_FR[1:(length(DIRECTORATES_FR)-1)]) }})
   output$chng1_outputp4 <- renderUI({
-    if(input$againstp4==2018) {
+    if(input$againstp4==2019) {
+      selectInput(inputId="change1p4",label=NULL,c("DGORAL"="DGORAL"),
+                  width="90px")}
+    else if(input$againstp4==2018) {
       selectInput(inputId="change1p4",label=NULL,
                   c("DGORAL"="DGORAL","2018"="2018"),width="90px") }
     else {
@@ -299,7 +304,8 @@ server <- function(input, output, session) {
             res[res$SURVEYR==2019 & res$ORGANIZATION_EN==dir,"POSITIVE"],
             na.rm=TRUE)
           avg2 <- mean(
-            res[res$SURVEYR==2018 & res$ORGANIZATION_EN==dir,"POSITIVE"],
+            res[res$SURVEYR==input$againstp1 & res$ORGANIZATION_EN==dir,
+                "POSITIVE"],
             na.rm=TRUE)
           if(!is.nan(avg1) & !is.nan(avg2)
              & round(abs(avg1-avg2),0) >= input$change2p1) {
@@ -320,14 +326,16 @@ server <- function(input, output, session) {
       for(q in allqs) {
         if(!(q %in% data.f[data.f$SURVEYR==2019,"QUESTION_FR"])
            | !(q %in% data.f[data.f$SURVEYR==input$againstp4,"QUESTION_FR"])) {
-          next }
+          next
+        }
         if(input$change1p4=="DGORAL" & input$change3p4!="any") {
           res <- data.f[data.f$SURVEYR==2019
-                       & data.f$ORGANIZATION_FR %in% c("DGORAL",input$change3p4)
-                       & data.f$QUESTION_FR==q,]
+                        & data.f$ORGANIZATION_FR %in% c("DGORAL",
+                                                        input$change3p4)
+                        & data.f$QUESTION_FR==q,]
           if(is.na(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"])
              | is.na(res[res$ORGANIZATION_FR==input$change3p4,"POSITIVE"])
-             | abs(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"] -
+             | abs(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"]-
                    res[res$ORGANIZATION_FR==input$change3p4,"POSITIVE"])
              < input$change2p4) {
             next }}
@@ -337,7 +345,7 @@ server <- function(input, output, session) {
           for(dir in input$directoratep4) {
             if(!is.na(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"])
                & !is.na(res[res$ORGANIZATION_FR==dir,"POSITIVE"])
-               & abs(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"] -
+               & abs(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"]-
                      res[res$ORGANIZATION_FR==dir,"POSITIVE"])
                >= input$change2p4) {
               greaterThanMin <- TRUE
@@ -349,8 +357,8 @@ server <- function(input, output, session) {
                         & data.f$QUESTION_FR==q,]
           if(is.na(res[res$SURVEYR==2019,"POSITIVE"])
              | is.na(res[res$SURVEYR==input$againstp4,"POSITIVE"])
-             | abs(res[res$SURVEYR==2019,"POSITIVE"] -
-                   res[res$SURVEYR==input$againstp4,"POSITIVE"])
+             | abs(res[res$SURVEYR==2019,"POSITIVE"]
+                   -res[res$SURVEYR==input$againstp4,"POSITIVE"])
              < input$change2p4) {
             next }}
         else {
@@ -362,8 +370,8 @@ server <- function(input, output, session) {
                           "POSITIVE"])
                & !is.na(res[res$SURVEYR==input$againstp4
                             & res$ORGANIZATION_FR==dir,"POSITIVE"])
-               & abs(res[res$SURVEYR==2019
-                         & res$ORGANIZATION_FR==dir,"POSITIVE"] -
+               & abs(res[res$SURVEYR==2019 & res$ORGANIZATION_FR==dir,
+                         "POSITIVE"] -
                      res[res$SURVEYR==input$againstp4
                          & res$ORGANIZATION_FR==dir,"POSITIVE"])
                >= input$change2p4) {
@@ -382,8 +390,8 @@ server <- function(input, output, session) {
                      na.rm=TRUE)
         if(!is.nan(avg1) & !is.nan(avg2)
            & round(abs(avg1-avg2),0) >= input$change2p4) {
-          qs <- c("Toutes questions (moyennées)",qs) }}
-      else if(input$change1p4=="DGORAL") {
+          qs <- c("All Toutes questions (moyennées)",qs) }}
+      else if(input$change1p4=="DGORAL"){
         res <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_FR %in% qs,]
         avg1 <- mean(res[res$ORGANIZATION_FR=="DGORAL","POSITIVE"],na.rm=TRUE)
         for(dir in input$directoratep4) {
@@ -404,10 +412,13 @@ server <- function(input, output, session) {
         res <- data.f[data.f$ORGANIZATION_FR %in% input$directoratep4
                       & data.f$QUESTION_FR %in% qs,]
         for(dir in input$directoratep4) {
-          avg1 <- mean(res[res$SURVEYR==2019 & res$ORGANIZATION_FR==dir,
-                           "POSITIVE"],na.rm=TRUE)
-          avg2 <- mean(res[res$SURVEYR==2018 & res$ORGANIZATION_FR==dir,
-                           "POSITIVE"],na.rm=TRUE)
+          avg1 <- mean(
+            res[res$SURVEYR==2019 & res$ORGANIZATION_FR==dir,"POSITIVE"],
+            na.rm=TRUE)
+          avg2 <- mean(
+            res[res$SURVEYR==input$againstp4 & res$ORGANIZATION_FR==dir,
+                "POSITIVE"],
+            na.rm=TRUE)
           if(!is.nan(avg1) & !is.nan(avg2)
              & round(abs(avg1-avg2),0) >= input$change2p4) {
             qs <- c("Toutes questions (moyennées)",qs)
@@ -493,12 +504,22 @@ server <- function(input, output, session) {
               avgNegOld[pos] <- round(mean(res$NEGATIVE,na.rm=TRUE),0) }
             avgNeutOld[pos] <- 100-avgPosOld[pos]-avgNegOld[pos]
           }
-          d <- data.frame(
-            SURVEYR=c(rep(2019,length(dirs)),rep(input$againstp1,length(dirs))),
-            ORGANIZATION_EN=rep(dirs,2),
-            POSITIVE=c(avgPos,avgPosOld),
-            NEUTRAL=c(avgNeut,avgNeutOld),
-            NEGATIVE=c(avgNeg,avgNegOld))
+          if(input$againstp1==2019) {
+            d <- data.frame(
+              SURVEYR=c(rep(2019,length(dirs))),
+              ORGANIZATION_EN=dirs,
+              POSITIVE=avgPos,
+              NEUTRAL=avgNeut,
+              NEGATIVE=avgNeg) }
+          else {
+            d <- data.frame(
+              SURVEYR=c(rep(2019,length(dirs)),
+                        rep(input$againstp1,length(dirs))),
+              ORGANIZATION_EN=rep(dirs,2),
+              POSITIVE=c(avgPos,avgPosOld),
+              NEUTRAL=c(avgNeut,avgNeutOld),
+              NEGATIVE=c(avgNeg,avgNegOld))
+          }
         } else {
           d <- data[data$SURVEYR %in% c(2019,input$againstp1)
                     & data$ORGANIZATION_EN %in% c("ROEB",input$directoratep1)
@@ -549,6 +570,45 @@ server <- function(input, output, session) {
                  </strong>
                </div>
              </div></td></tr>"
+      htmlstr3 <- "<div style='display:inline-block;
+                               width:45%;
+                               margin:3px 0 27px 2%;'>
+                     <table style='width:100%;'>"
+      rowTemplate3 <-
+        "<tr>
+           <td>
+             <div class='well' style='background-color:%s; width:100%%;
+               height:85px; padding-top:10px;'>
+               <div style='color:%s; font-size:10pt;'>
+                 Positive in 2019
+               </div>
+               <div style='text-align:right;'>
+                 <strong style='color:%s; font-size:25pt;'>
+                   %s%%
+                 </strong>
+               </div>
+             </div></td></tr>"
+      htmlstr4 <- "<div style='display:inline-block;
+                               width:51%;
+                               margin:3px 2% 27px 0;'>
+                     <table style='width:100%;'>"
+      rowTemplate4 <-
+        "<tr>
+           <td class='rightcol'>
+             <div class='well' style='padding:0 9%% 0 9%%; background-color:%s;
+               width:100%%; height:85px;'>
+               <div style='color:%s; font-size:10pt; width:50%%;
+                 display:inline-block; padding-top:32px; vertical-align:top;'>
+                 <span>vs ROEB</span>
+               </div>
+               <div style='text-align:right; display:inline-block; width:47%%;
+                 padding-top:23px;'>
+                 <strong style='color:%s; font-size:20pt;display:inline-block;'>
+                   %s
+                 </strong>
+               </div>
+             </div></td></tr>"
+      
       isolate(
         for(dir in c("ROEB",input$directoratep1)) {
           positive <- d[d$SURVEYR=="2019" & d$ORGANIZATION_EN==dir,"POSITIVE"]
@@ -558,80 +618,141 @@ server <- function(input, output, session) {
           if(dir != "ROEB") {
             change1 <- d[d$SURVEYR=="2019" & d$ORGANIZATION_EN==dir,"POSITIVE"]-
               d[d$SURVEYR=="2019" & d$ORGANIZATION_EN=="ROEB","POSITIVE"] }
-          if(is.na(positive)){
+          if(is.na(positive)) {
             htmlstr <-
               paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["null"],
                                      HTML_COLOURS["grey80"],
-                                     HTML_COLOURS["grey80"],"--")) }
+                                     HTML_COLOURS["grey80"],"--"))
+            htmlstr3 <-
+              paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["null"],
+                                      HTML_COLOURS["grey80"],
+                                      HTML_COLOURS["grey80"],"--")) }
           else {
             if(positive >= 80) {
               htmlstr <-
                 paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["steelblue4"],
                                        HTML_COLOURS["white"],
-                                       HTML_COLOURS["white"],positive)) }
+                                       HTML_COLOURS["white"],positive))
+              htmlstr3 <-
+                paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["steelblue4"],
+                                        HTML_COLOURS["white"],
+                                        HTML_COLOURS["white"],positive)) }
             else if(positive >= 70 & positive < 80) {
               htmlstr <-
                 paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["steelblue3"],
                                        HTML_COLOURS["white"],
-                                       HTML_COLOURS["white"],positive)) }
+                                       HTML_COLOURS["white"],positive))
+              htmlstr3 <-
+                paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["steelblue3"],
+                                        HTML_COLOURS["white"],
+                                        HTML_COLOURS["white"],positive)) }
             else if(positive >= 60 & positive < 70) {
               htmlstr <-
                 paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["lightskyblue"],
                                        HTML_COLOURS["white"],
-                                       HTML_COLOURS["white"],positive)) }
+                                       HTML_COLOURS["white"],positive))
+              htmlstr3 <-
+                paste0(htmlstr3,sprintf(rowTemplate3,
+                                        HTML_COLOURS["lightskyblue"],
+                                        HTML_COLOURS["white"],
+                                        HTML_COLOURS["white"],positive)) }
             else if(positive >= 50 & positive < 60) {
               htmlstr <-
                 paste0(htmlstr,
                        sprintf(rowTemplate,HTML_COLOURS["lightskyblue1"],
+                               HTML_COLOURS["white"],HTML_COLOURS["white"],
+                               positive))
+              htmlstr3 <-
+                paste0(htmlstr3,
+                       sprintf(rowTemplate3,HTML_COLOURS["lightskyblue1"],
                                HTML_COLOURS["white"],HTML_COLOURS["white"],
                                positive)) }
             else {
               htmlstr <-
                 paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["aliceblue"],
                                        HTML_COLOURS["slategray3"],
-                                       HTML_COLOURS["slategray3"],positive)) }}
+                                       HTML_COLOURS["slategray3"],positive))
+              htmlstr3 <-
+                paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["aliceblue"],
+                                        HTML_COLOURS["slategray3"],
+                                        HTML_COLOURS["slategray3"],positive)) }}
           if(is.na(change1)) {
             htmlstr2 <-
               paste0(htmlstr2,
                      sprintf(rowTemplate2,HTML_COLOURS["null"],
                              HTML_COLOURS["grey80"],"ROEB",
-                             HTML_COLOURS["grey80"],"--")) }
+                             HTML_COLOURS["grey80"],"--"))
+            htmlstr4 <-
+              paste0(htmlstr4,
+                     sprintf(rowTemplate4,HTML_COLOURS["null"],
+                             HTML_COLOURS["grey80"],HTML_COLOURS["grey80"],
+                             "--"))}
           else {
             if(change1 >= 10) {
               htmlstr2 <-
                 paste0(htmlstr2,
                        sprintf(rowTemplate2,HTML_COLOURS["palegreen3"],
                                HTML_COLOURS["seagreen"],"ROEB",
-                               HTML_COLOURS["seagreen"],paste0("+",change1)))}
+                               HTML_COLOURS["seagreen"],paste0("+",change1)))
+              htmlstr4 <-
+                paste0(htmlstr4,
+                       sprintf(rowTemplate4,HTML_COLOURS["palegreen3"],
+                               HTML_COLOURS["seagreen"],
+                               HTML_COLOURS["seagreen"],paste0("+",change1))) }
             else if(change1 >= 5) {
               htmlstr2 <-
                 paste0(htmlstr2,
                        sprintf(rowTemplate2,HTML_COLOURS["darkseagreen2"],
                                HTML_COLOURS["seagreen"],"ROEB",
-                               HTML_COLOURS["seagreen"],paste0("+",change1)))}
+                               HTML_COLOURS["seagreen"],paste0("+",change1)))
+              htmlstr4 <-
+                paste0(htmlstr4,
+                       sprintf(rowTemplate4,HTML_COLOURS["darkseagreen2"],
+                               HTML_COLOURS["seagreen"],
+                               HTML_COLOURS["seagreen"],paste0("+",change1))) }
             else if(change1 > 0) {
               htmlstr2 <-
                 paste0(htmlstr2,
                        sprintf(rowTemplate2,HTML_COLOURS["snow"],
                                HTML_COLOURS["grey60"],"ROEB",
-                               HTML_COLOURS["grey60"],paste0("+",change1))) }
+                               HTML_COLOURS["grey60"],paste0("+",change1)))
+              htmlstr4 <-
+                paste0(htmlstr4,
+                       sprintf(rowTemplate4,HTML_COLOURS["snow"],
+                               HTML_COLOURS["grey60"],HTML_COLOURS["grey60"],
+                               paste0("+",change1))) }
             else if(change1 > -5) {
               htmlstr2 <-
                 paste0(htmlstr2,
                        sprintf(rowTemplate2,HTML_COLOURS["snow"],
                                HTML_COLOURS["grey60"],"ROEB",
-                               HTML_COLOURS["grey60"],change1)) }
+                               HTML_COLOURS["grey60"],change1))
+              htmlstr4 <-
+                paste0(htmlstr4,
+                       sprintf(rowTemplate4,HTML_COLOURS["snow"],
+                               HTML_COLOURS["grey60"],HTML_COLOURS["grey60"],
+                               change1)) }
             else if(change1 > -10) {
               htmlstr2 <-
                 paste0(htmlstr2,
                        sprintf(rowTemplate2,HTML_COLOURS["pink"],
                                HTML_COLOURS["firebrick"],"ROEB",
+                               HTML_COLOURS["firebrick"],change1))
+              htmlstr4 <-
+                paste0(htmlstr4,
+                       sprintf(rowTemplate4,HTML_COLOURS["pink"],
+                               HTML_COLOURS["firebrick"],
                                HTML_COLOURS["firebrick"],change1)) }
             else {
               htmlstr2 <-
                 paste0(htmlstr2,
                        sprintf(rowTemplate2,HTML_COLOURS["lightcoral"],
                                HTML_COLOURS["firebrick"],"ROEB",
+                               HTML_COLOURS["firebrick"],change1))
+              htmlstr4 <-
+                paste0(htmlstr4,
+                       sprintf(rowTemplate4,HTML_COLOURS["lightcoral"],
+                               HTML_COLOURS["firebrick"],
                                HTML_COLOURS["firebrick"],change1)) }}
           if(is.na(change2)) {
             htmlstr2 <-
@@ -679,35 +800,52 @@ server <- function(input, output, session) {
         })
       htmlstr <- paste0(htmlstr,"</table></div>")
       htmlstr2 <- paste0(htmlstr2,"</table></div>")
+      htmlstr3 <- paste0(htmlstr3,"</table></div>")
+      htmlstr4 <- paste0(htmlstr4,"</table></div>")
+      p <- ggplot(d.m,aes(x=SURVEYR,y=value,fill=variable)) +
+        geom_bar(stat="identity",
+                 position=position_stack(reverse=TRUE)) +
+        coord_flip() +
+        facet_grid(rows=vars(ORGANIZATION_EN)) +
+        theme_light() +
+        labs(x=NULL, y="%", fill="") +
+        scale_fill_manual(
+          breaks=c("POSITIVE","NEUTRAL","NEGATIVE"),
+          values=c("steelblue4","azure1","lightsalmon")) +
+        geom_text(size=3,
+                  position=position_stack(vjust=0.5,reverse=TRUE),
+                  aes(label=value)) +
+        theme(legend.position="top")
       
       tagList(
         isolate(h3(input$themep1)),
         isolate(h5(input$questionp1)),
         br(),
         isolate(
-          box(
-            status=NULL,solidHeader=TRUE,width=7,
-            renderPlot(height=195+111*length(input$directoratep1),{
-              ggplot(d.m,aes(x=SURVEYR,y=value,fill=variable)) +
-                geom_bar(stat="identity",
-                         position=position_stack(reverse=TRUE)) +
-                coord_flip() +
-                facet_grid(rows=vars(ORGANIZATION_EN)) +
-                theme_light() +
-                labs(x=NULL, y="%", fill="") +
-                scale_fill_manual(
-                  breaks=c("POSITIVE","NEUTRAL","NEGATIVE"),
-                  values=c("steelblue4","azure1","lightsalmon")) +
-                geom_text(size=3,
-                          position=position_stack(vjust=0.5,reverse=TRUE),
-                          aes(label=value)) +
-                theme(legend.position="top")
-            }))
+          if(input$againstp1==2019) {
+            box(
+              status=NULL,solidHeader=TRUE,width=7,
+              renderPlot(height=160+85*length(input$directoratep1),{
+                suppressWarnings({ print(p) })
+              }))}
+          else {
+            box(
+              status=NULL,solidHeader=TRUE,width=7,
+              renderPlot(height=195+111*length(input$directoratep1),{
+                suppressWarnings({ print(p) })
+              }))}
         ),
-        box(
-          status=NULL,solidHeader=TRUE,title="Trends",width=5,
-          HTML(paste0(htmlstr,htmlstr2)))
+        isolate(
+          if(input$againstp1==2019) {
+            box(
+              status=NULL,solidHeader=TRUE,title="Trends",width=5,
+              HTML(paste0(htmlstr3,htmlstr4))) }
+          else {
+            box(
+              status=NULL,solidHeader=TRUE,title="Trends",width=5,
+              HTML(paste0(htmlstr,htmlstr2))) }
         )
+      )
     })
   })
   observeEvent(input$retrievep4,{
@@ -755,12 +893,22 @@ server <- function(input, output, session) {
               avgNegOld[pos] <- round(mean(res$NEGATIVE,na.rm=TRUE),0) }
             avgNeutOld[pos] <- 100-avgPosOld[pos]-avgNegOld[pos]
           }
-          d <- data.frame(
-            SURVEYR=c(rep(2019,length(dirs)),rep(input$againstp4,length(dirs))),
-            ORGANIZATION_FR=rep(dirs,2),
-            POSITIVE=c(avgPos,avgPosOld),
-            NEUTRAL=c(avgNeut,avgNeutOld),
-            NEGATIVE=c(avgNeg,avgNegOld))
+          if(input$againstp4==2019) {
+            d <- data.frame(
+              SURVEYR=c(rep(2019,length(dirs))),
+              ORGANIZATION_FR=dirs,
+              POSITIVE=avgPos,
+              NEUTRAL=avgNeut,
+              NEGATIVE=avgNeg) }
+          else {
+            d <- data.frame(
+              SURVEYR=c(rep(2019,length(dirs)),
+                        rep(input$againstp4,length(dirs))),
+              ORGANIZATION_FR=rep(dirs,2),
+              POSITIVE=c(avgPos,avgPosOld),
+              NEUTRAL=c(avgNeut,avgNeutOld),
+              NEGATIVE=c(avgNeg,avgNegOld))
+          }
         } else {
           d <- data[data$SURVEYR %in% c(2019,input$againstp4)
                     & data$ORGANIZATION_FR %in% c("DGORAL",input$directoratep4)
@@ -812,6 +960,46 @@ server <- function(input, output, session) {
                  </strong>
                </div>
              </div></td></tr>"
+      htmlstr3 <- "<div style='display:inline-block;
+                               width:45%;
+                               margin:3px 0 27px 2%;'>
+                     <table style='width:100%;'>"
+      rowTemplate3 <-
+        "<tr>
+           <td>
+             <div class='well' style='background-color:%s; width:100%%;
+               height:85px; padding-top:10px; padding-left:18px;
+               padding-right:18px;'>
+               <div style='color:%s; font-size:10pt;'>
+                 Positives en 2019
+               </div>
+               <div style='text-align:right;'>
+                 <strong style='color:%s; font-size:25pt;'>
+                   %s%%
+                 </strong>
+               </div>
+             </div></td></tr>"
+      htmlstr4 <- "<div style='display:inline-block;
+                               width:51%;
+                               margin:3px 2% 27px 0;'>
+                     <table style='width:100%;'>"
+      rowTemplate4 <-
+        "<tr>
+           <td class='rightcol'>
+             <div class='well' style='padding:0 9%% 0 9%%; background-color:%s;
+               width:100%%; height:85px;'>
+               <div style='color:%s; font-size:10pt; width:60%%;
+                 display:inline-block; padding-top:32px; vertical-align:top;'>
+                 <span>c. la DGORAL</span>
+               </div>
+               <div style='text-align:right; display:inline-block; width:37%%;
+                 padding-top:23px;'>
+                 <strong style='color:%s; font-size:20pt;display:inline-block;'>
+                   %s
+                 </strong>
+               </div>
+             </div></td></tr>"
+      
       isolate(
         for(dir in c("DGORAL",input$directoratep4)) {
           positive <- d[d$SURVEYR=="2019" & d$ORGANIZATION_FR==dir,"POSITIVE"]
@@ -825,39 +1013,70 @@ server <- function(input, output, session) {
             htmlstr <-
               paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["null"],
                                      HTML_COLOURS["grey80"],
-                                     HTML_COLOURS["grey80"],"--")) }
+                                     HTML_COLOURS["grey80"],"--"))
+            htmlstr3 <-
+              paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["null"],
+                                      HTML_COLOURS["grey80"],
+                                      HTML_COLOURS["grey80"],"--")) }
           else {
             if(positive >= 80) {
               htmlstr <-
                 paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["steelblue4"],
                                        HTML_COLOURS["white"],
-                                       HTML_COLOURS["white"],positive)) }
+                                       HTML_COLOURS["white"],positive))
+              htmlstr3 <-
+                paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["steelblue4"],
+                                        HTML_COLOURS["white"],
+                                        HTML_COLOURS["white"],positive)) }
             else if(positive >= 70 & positive < 80) {
               htmlstr <-
                 paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["steelblue3"],
                                        HTML_COLOURS["white"],
-                                       HTML_COLOURS["white"],positive)) }
+                                       HTML_COLOURS["white"],positive))
+              htmlstr3 <-
+                paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["steelblue3"],
+                                        HTML_COLOURS["white"],
+                                        HTML_COLOURS["white"],positive)) }
             else if(positive >= 60 & positive < 70) {
               htmlstr <-
                 paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["lightskyblue"],
                                        HTML_COLOURS["white"],
-                                       HTML_COLOURS["white"],positive)) }
+                                       HTML_COLOURS["white"],positive))
+              htmlstr3 <-
+                paste0(htmlstr3,
+                       sprintf(rowTemplate3,HTML_COLOURS["lightskyblue"],
+                               HTML_COLOURS["white"],HTML_COLOURS["white"],
+                               positive)) }
             else if(positive >= 50 & positive < 60) {
               htmlstr <-
                 paste0(htmlstr,
                        sprintf(rowTemplate,HTML_COLOURS["lightskyblue1"],
+                               HTML_COLOURS["white"],HTML_COLOURS["white"],
+                               positive))
+              htmlstr3 <-
+                paste0(htmlstr3,
+                       sprintf(rowTemplate3,HTML_COLOURS["lightskyblue1"],
                                HTML_COLOURS["white"],HTML_COLOURS["white"],
                                positive)) }
             else {
               htmlstr <-
                 paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["aliceblue"],
                                        HTML_COLOURS["slategray3"],
-                                       HTML_COLOURS["slategray3"],positive)) }}
+                                       HTML_COLOURS["slategray3"],positive))
+              htmlstr3 <-
+                paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["aliceblue"],
+                               HTML_COLOURS["slategray3"],
+                               HTML_COLOURS["slategray3"],positive)) }}
           if(is.na(change1)) {
             htmlstr2 <-
               paste0(htmlstr2,
                      sprintf(rowTemplate2,HTML_COLOURS["null"],
                              HTML_COLOURS["grey80"],"la DGORAL",
+                             HTML_COLOURS["grey80"],"--"))
+            htmlstr4 <-
+              paste0(htmlstr4,
+                     sprintf(rowTemplate4,HTML_COLOURS["null"],
+                             HTML_COLOURS["grey80"],
                              HTML_COLOURS["grey80"],"--")) }
           else {
             if(change1 >= 10) {
@@ -865,36 +1084,66 @@ server <- function(input, output, session) {
                 paste0(htmlstr2,
                        sprintf(rowTemplate2,HTML_COLOURS["palegreen3"],
                                HTML_COLOURS["seagreen"],"la DGORAL",
-                               HTML_COLOURS["seagreen"],paste0("+",change1)))}
+                               HTML_COLOURS["seagreen"],paste0("+",change1)))
+              htmlstr4 <-
+                paste0(htmlstr4,
+                       sprintf(rowTemplate4,HTML_COLOURS["palegreen3"],
+                               HTML_COLOURS["seagreen"],
+                               HTML_COLOURS["seagreen"],paste0("+",change1))) }
             else if(change1 >= 5) {
               htmlstr2 <-
                 paste0(htmlstr2,
                        sprintf(rowTemplate2,HTML_COLOURS["darkseagreen2"],
                                HTML_COLOURS["seagreen"],"la DGORAL",
-                               HTML_COLOURS["seagreen"],paste0("+",change1)))}
+                               HTML_COLOURS["seagreen"],paste0("+",change1)))
+              htmlstr4 <-
+                paste0(htmlstr4,
+                       sprintf(rowTemplate4,HTML_COLOURS["darkseagreen2"],
+                               HTML_COLOURS["seagreen"],
+                               HTML_COLOURS["seagreen"],paste0("+",change1))) }
             else if(change1 > 0) {
               htmlstr2 <-
                 paste0(htmlstr2,
                        sprintf(rowTemplate2,HTML_COLOURS["snow"],
                                HTML_COLOURS["grey60"],"la DGORAL",
+                               HTML_COLOURS["grey60"],paste0("+",change1)))
+              htmlstr4 <-
+                paste0(htmlstr4,
+                       sprintf(rowTemplate4,HTML_COLOURS["snow"],
+                               HTML_COLOURS["grey60"],
                                HTML_COLOURS["grey60"],paste0("+",change1))) }
             else if(change1 > -5) {
               htmlstr2 <-
                 paste0(htmlstr2,
                        sprintf(rowTemplate2,HTML_COLOURS["snow"],
                                HTML_COLOURS["grey60"],"la DGORAL",
+                               HTML_COLOURS["grey60"],change1))
+              htmlstr4 <-
+                paste0(htmlstr4,
+                       sprintf(rowTemplate4,HTML_COLOURS["snow"],
+                               HTML_COLOURS["grey60"],
                                HTML_COLOURS["grey60"],change1)) }
             else if(change1 > -10) {
               htmlstr2 <-
                 paste0(htmlstr2,
                        sprintf(rowTemplate2,HTML_COLOURS["pink"],
                                HTML_COLOURS["firebrick"],"la DGORAL",
+                               HTML_COLOURS["firebrick"],change1))
+              htmlstr4 <-
+                paste0(htmlstr4,
+                       sprintf(rowTemplate4,HTML_COLOURS["pink"],
+                               HTML_COLOURS["firebrick"],
                                HTML_COLOURS["firebrick"],change1)) }
             else {
               htmlstr2 <-
                 paste0(htmlstr2,
                        sprintf(rowTemplate2,HTML_COLOURS["lightcoral"],
                                HTML_COLOURS["firebrick"],"la DGORAL",
+                               HTML_COLOURS["firebrick"],change1))
+              htmlstr4 <-
+                paste0(htmlstr4,
+                       sprintf(rowTemplate4,HTML_COLOURS["lightcoral"],
+                               HTML_COLOURS["firebrick"],
                                HTML_COLOURS["firebrick"],change1)) }}
           if(is.na(change2)) {
             htmlstr2 <-
@@ -942,35 +1191,52 @@ server <- function(input, output, session) {
         })
       htmlstr <- paste0(htmlstr,"</table></div>")
       htmlstr2 <- paste0(htmlstr2,"</table></div>")
+      htmlstr3 <- paste0(htmlstr3,"</table></div>")
+      htmlstr4 <- paste0(htmlstr4,"</table></div>")
+      p <- ggplot(d.m, aes(x=SURVEYR,y=value,fill=variable)) +
+        geom_bar(stat="identity",
+                 position=position_stack(reverse=TRUE)) +
+        coord_flip() +
+        facet_grid(rows=vars(ORGANIZATION_FR)) +
+        theme_light() +
+        labs(x=NULL, y="%", fill="") +
+        scale_fill_manual(
+          breaks=c("POSITIVE","NEUTRAL","NEGATIVE"),
+          labels=c("POSITIVES","NEUTRES","NÉGATIVES"),
+          values=c("steelblue4","azure1","lightsalmon")) +
+        geom_text(size=3,
+                  position=position_stack(vjust=0.5,reverse=TRUE),
+                  aes(label=value)) +
+        theme(legend.position="top")
       
       tagList(
         isolate(h3(input$themep4)),
         isolate(h5(input$questionp4)),
         br(),
         isolate(
-          box(
-            status=NULL,solidHeader=TRUE,width=7,
-            renderPlot(height=195+111*length(input$directoratep4), {
-              ggplot(d.m, aes(x=SURVEYR,y=value,fill=variable)) +
-                geom_bar(stat="identity",
-                         position=position_stack(reverse=TRUE)) +
-                coord_flip() +
-                facet_grid(rows=vars(ORGANIZATION_FR)) +
-                theme_light() +
-                labs(x=NULL, y="%", fill="") +
-                scale_fill_manual(
-                  breaks=c("POSITIVE","NEUTRAL","NEGATIVE"),
-                  labels=c("POSITIVES","NEUTRES","NÉGATIVES"),
-                  values=c("steelblue4","azure1","lightsalmon")) +
-                geom_text(size=3,
-                          position=position_stack(vjust=0.5,reverse=TRUE),
-                          aes(label=value)) +
-                theme(legend.position="top")
-            }))
+          if(input$againstp4==2019) {
+            box(
+              status=NULL,solidHeader=TRUE,width=7,
+              renderPlot(height=160+85*length(input$directoratep4),{
+                suppressWarnings({ print(p) })
+              }))}
+          else {
+            box(
+              status=NULL,solidHeader=TRUE,width=7,
+              renderPlot(height=195+111*length(input$directoratep4),{
+                suppressWarnings({ print(p) })
+              }))}
         ),
-        box(
-          status=NULL,solidHeader=TRUE,title="Les tendances",width=5,
-          HTML(paste0(htmlstr,htmlstr2)))
+        isolate(
+          if(input$againstp4==2019) {
+            box(
+              status=NULL,solidHeader=TRUE,title="Les tendances",width=5,
+              HTML(paste0(htmlstr3,htmlstr4))) }
+          else {
+            box(
+              status=NULL,solidHeader=TRUE,title="Les tendances",width=5,
+              HTML(paste0(htmlstr,htmlstr2))) }
+        )
       )
     })
   })

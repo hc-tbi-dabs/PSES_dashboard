@@ -49,7 +49,9 @@ body <- dashboardBody(
             tags$tr(
               tags$td(class="textlabel",strong("Compare against:")),
               tags$td(selectInput(inputId="againstp1",label=NULL,
-                                  c("2018"="2018","2017"="2017"),width="90px"))
+                                  c("--"="2019","2018"="2018","2017"="2017"),
+                                  selected="2018",
+                                  width="90px"))
             ),
             tags$tr(
               tags$td(class="textlabel",strong("Directorates:")),
@@ -136,7 +138,8 @@ body <- dashboardBody(
             tags$tr(
               tags$td(class="textlabel",strong("Comparer contre:")),
               tags$td(selectInput(inputId="againstp4",label=NULL,
-                                  c("2018"="2018","2017"="2017"),width="90px"))
+                                  c("--"="2019","2018"="2018","2017"="2017"),
+                                  selected="2018",width="90px"))
             ),
             tags$tr(
               tags$td(class="textlabel",strong("Directions:")),
