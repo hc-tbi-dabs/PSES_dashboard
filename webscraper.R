@@ -1,11 +1,15 @@
 
 ## ~~~~~~~~~~~~ WEBSCRAPER ~~~~~~~~~~~~~ ##
 
-# Run this program to update the local CSV from the Web.
+  # Created by: Sijia Wang
+  # Team: Data Analytics and Business Solutions (DABS)
+  # Version: 1.0
+  # Last modified: 2020-02-26
+  # Description: Run this program to update the local CSV from the Web.
 
-# Years: 2019, 2018, 2017
-# Units: Public Service, Health Canada, ROEB, all directorates of ROEB
-# Notes: Allow approx. 3 minutes for the data to be compiled
+  # Years: 2019, 2018, 2017
+  # Units: Public Service, Health Canada, ROEB, all directorates of ROEB
+  # Notes: Allow approx. 3 minutes for the data to be compiled
 
 library(rvest)
 library(xml2)

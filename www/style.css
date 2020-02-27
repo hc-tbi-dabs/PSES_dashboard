@@ -1,6 +1,14 @@
 
 /* ~~~~~~~~~~~~ STYLESHEET ~~~~~~~~~~~~~ */
 
+/* Created by: Sijia Wang
+ * Team: Data Analytics and Business Solutions (DABS)
+ * Version: 1.0
+ * Last modified: 2020-02-26
+ * Description: CSS for 2019 PSES/SAFF dashboard application.
+ */
+
+/* Loading screen div */
 #loadingscrn {
   position: absolute;
   background: #3c8dbc;
@@ -12,18 +20,21 @@
   color: #ffffff;
 }
 
+/* Continue in English and French buttons */
 #selecteng, #selectfr {
   margin: 50px 5px 60px 5px;
   color: #444444;
   font-size: 20px;
 }
 
+/* Language selector dropdown component */
 #language+ div>.selectize-dropdown {
   background: #1e272c;
   color: #ffffff;
   margin-left: 20px
 }
 
+/* Language selector input/visible component */
 #language+ div>.selectize-input {
   background: #1e272c;
   color: #ffffff;
@@ -32,31 +43,37 @@
   margin: 10px 0 0 20px;
 }
 
+/* Language selector dropdown arrow */
 #language+ div>.selectize-input:after {
   right: 10px;
   border: 6px solid transparent;
   border-color: #fff transparent transparent transparent;
 }
 
+/* Numeric input for filtering criteria for comparison */
 #change2p1, #change2p4 {
   border-radius: 5px;
 }
 
+/* Table cells */
 td {
   padding-left: 0;
   padding-right: 10px;
 }
 
+/* The second column of the Trends display */
 .rightcol {
   padding-right: 0;
 }
 
+/* Wellpanels within the Trends display */
 .well {
   border-color: #ffffff;
   margin: 0;
   padding: 5;
 }
 
+/* Labels for selector fields */
 .textlabel {
   text-align: right;
   padding-bottom: 25px;
@@ -68,10 +85,12 @@ td {
   padding-left: 3px;
 }
 
+/* Removes increment arrows from numeric input in Mozilla Firefox */
 input[type='number'] {
   -moz-appearance: textfield;
 }
 
+/* Removes increment arrows from numeric input in Google Chrome */
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;

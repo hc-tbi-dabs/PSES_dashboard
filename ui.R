@@ -1,6 +1,13 @@
 
 ## ~~~~~~~~~~~~ UI ~~~~~~~~~~~~~ ##
 
+ # Created by: Sijia Wang
+ # Team: Data Analytics and Business Solutions (DABS)
+ # Version: 1.0
+ # Last modified: 2020-02-26
+ # Description: User interface for 2019 PSES/SAFF results dashboard for ROEB
+ #   and its directorates.
+
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
@@ -18,6 +25,21 @@ themes <- read.csv(
 header <- dashboardHeader(title = textOutput(outputId="title"))
 
 sidebar <- dashboardSidebar(
+  
+  # Tabs:
+  #
+  #   1/4. Compare Data / Comparer les données - allows users to compare the
+  #         2019 results for individual directorates of ROEB against previous
+  #         years or ROEB overall; specify questions of interest by theme,
+  #         directorate, and/or amount of change vs ROEB or a previous year;
+  #         view results and trends in an easy-to-read, visual format
+  #
+  #   2/5. Full Results by Year / Résultats complets par année - full breakdown
+  #         of all responses for each question from 2017-2019 surverys for
+  #         Public service, Health Canada, ROEB, and all directorates of ROEB
+  #
+  #   3/6. About PSES / À propos du SAFF - information and link to PSES website
+  
   sidebarMenu(
     id="tabs",
     menuItem("Compare Data", tabName="compare_en", icon=icon("project-diagram"),
@@ -38,6 +60,8 @@ sidebar <- dashboardSidebar(
 
 body <- dashboardBody(
   tabItems(
+    
+    # Tab 1 -----------------------------
     tabItem(
       tabName="compare_en",
       fluidPage(
@@ -66,7 +90,8 @@ body <- dashboardBody(
               tags$td(class="textlabel",strong("Change with respect to:"),
                       width="120px"),
               tags$td(uiOutput(outputId="chng1_outputp1")),
-              tags$td(class="textlabel2",strong("of at least +/-"),width="95px"),
+              tags$td(class="textlabel2",strong("of at least +/-"),
+                      width="95px"),
               tags$td(style="padding-left:5px; padding-bottom:5px;",
                       numericInput(inputId="change2p1",label=NULL,value=0,min=0,
                                    step=1,width="42px")),
@@ -91,6 +116,8 @@ body <- dashboardBody(
           uiOutput(outputId="resultsp1")
         )
         )),
+    
+    # Tab 2 -----------------------------
     tabItem(
       tabName="full_en",
       fluidPage(
@@ -111,6 +138,8 @@ body <- dashboardBody(
         fluidRow(
           uiOutput(outputId="graphsp2") %>% withSpinner(color="#777777")
         ))),
+    
+    # Tab 3 -----------------------------
     tabItem(
       tabName="about_en",
       fluidPage(
@@ -127,6 +156,8 @@ body <- dashboardBody(
                  "here"),
           "to learn more."
         ))),
+    
+    # Tab 4 -----------------------------
     tabItem(
       tabName="compare_fr",
       fluidPage(
@@ -180,6 +211,8 @@ body <- dashboardBody(
           style="margin:30px 30px 10px 30px;",
           uiOutput(outputId="resultsp4")
         ))),
+    
+    # Tab 5 -----------------------------
     tabItem(
       tabName="full_fr",
       fluidPage(
@@ -200,6 +233,8 @@ body <- dashboardBody(
         fluidRow(
           uiOutput(outputId="graphsp5") %>% withSpinner(color="#777777")
         ))),
+    
+    # Tab 6 -----------------------------
     tabItem(
       tabName="about_fr",
       fluidPage(
@@ -223,10 +258,14 @@ ui <- tagList(
   useShinyjs(),
   extendShinyjs("www/scripts.js"),
   tags$link(rel="stylesheet",type="text/css",href="style.css"),
+  
+  # Main display ----------------------
   div(id="mainscrn", style="display:none;",
       dashboardPage(
         title="PSES Results/Résultats du SAFF", header,sidebar,body
       )),
+  
+  # Loading screen --------------------
   div(
     id="loadingscrn",
     fluidPage(
