@@ -3,9 +3,9 @@
 
  # Created by: Sijia Wang
  # Team: Data Analytics and Business Solutions (DABS)
- # Version: 1.0
- # Last modified: 2020-02-26
- # Description: Server for 2019 PSES/SAFF results dashboard for ROEB and its
+ # Version: 1.1
+ # Last modified: 2020-03-05
+ # Description: Server for 2019 PSES/SAFF dashboard for ROEB and its
  #   directorates.
 
 library(shiny)
@@ -18,81 +18,13 @@ library(plotly)
 library(reshape2)
 library(rmarkdown)
 
-## ~~~~ Data Files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-questions <-
-  read.csv("data/lookups/PSES_SAFF-Questions.csv",header=TRUE,encoding="UTF-8",
-           col.names=c("ID","ANS_TYPE","IS_REV","EN","FR","IND_EN","IND_FR",
-                       "IND_ID","SUBIND_EN","SUBIND_FR","SUBIND_ID"),
-           stringsAsFactors=FALSE)
-themes <- 
-  read.csv("data/lookups/PSES_SAFF-Themes_Thèmes.csv",header=TRUE,
-           encoding="UTF-8",col.names=c("THEME_ID","THEME_EN","THEME_FR"),
-           stringsAsFactors=FALSE)
-answers <-
-  read.csv("data/lookups/PSES_SAFF-Answers_Réponses.csv",header=TRUE,
-           encoding="UTF-8",col.names=c(paste0("TYPE",1:7,"_EN"),
-                                        paste0("TYPE",1:7,"_FR")),
-           stringsAsFactors=FALSE)
-data <-
-  read.csv(
-    "data/2019_2018_2017-PSES_SAFF-ROEB_DGORAL-Full_data_Données_complètes.csv",
-    header=TRUE,encoding="UTF-8",stringsAsFactors=FALSE)
-data <- data[,2:ncol(data)]
-
-## ~~~~ Global data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 # Vector of question IDs of the format QXX or QXXx, where X is a digit from
 #   0-9 and x is a letter from a-z (e.g. Q07 or Q59a)
 QIDS <- unique(questions$ID)
 N <- length(QIDS)
 
-DIRECTORATES_EN <-
-  c("Planning and Operations (POD)"="POD",
-    "Medical Devices and Clinical Compliance (MDCCD)"="MDCCD",
-    "Health Products Compliance (HPCD)"="HPCD",
-    "Laboratories (LABS)"="LABS",
-    "Policy and Regulatory Strategies / Assistant Deputy Minister's Office (PRSD/ADMO)"=
-      "PRSD and ADMO",
-    "Controlled Substances and Environmental Health (EHPD)"="EHPD",
-    "Consumer Product Safety, Tobacco, and Pesticides (CPCSD)"="CPCSD",
-    "Cannabis (CD)"="CD")
-DIRECTORATES_FR <-
-  c("Planification et opérations (DPO)"="DPO",
-    "Conformité des matériels médicaux et en milieux cliniques (DCMMMC)"=
-      "DCMMMC",
-    "Conformité des produits de santé (DCPS)"="DCPS",
-    "Laboratoires (LABS)"="LABS",
-    "Politiques et stratégies réglementaires / Bureau du sous-ministre adjoint (DPSR et BSMA)"=
-      "DPSR et BSMA",
-    "Substances contrôlées et santé environnementale (DSCSE)"="DSCSE",
-    "Sécurité des produits de consommation, tabac et pesticides (DSPCTP)"=
-      "DSPCTP",
-    "Cannabis (DC)"="DC")
-HTML_COLOURS <-
-  c("steelblue4"="#37648b",
-    "steelblue3"="#4f94cd",
-    "lightskyblue"="#8bcef8",
-    "lightskyblue1"="#b0e1ff",
-    "lightsalmon"="#ffa07a",
-    "palegreen3"="#7cce7c",
-    "darkseagreen2"="#b4eeb4",
-    "snow"="#fefaf9",
-    "pink"="#ffc0cb",
-    "lightcoral"="#f0807f",
-    "white"="#ffffff",
-    "firebrick"="#b22222",
-    "palegreen4"="#548b54",
-    "grey80"="#cccccc",
-    "grey70"="#b3b3b3",
-    "grey60"="#999999",
-    "seagreen"="#2e8a57",
-    "aliceblue"="#eff8ff",
-    "slategray3"="#a0b6cd",
-    "null"="#ebebeb")
-
 # Takes in a stacked bar ggplot 'p' and re-scales the colours in the bars based
-#   on the expected responses for question 'q' (lang is one of "en" or "fr")
+#   on the expected responses for question 'q' ('lang' is one of "en" or "fr")
 recolourBars <- function(q, p, lang) {
   
   # Variable 'atype':
@@ -157,6 +89,53 @@ recolourBars <- function(q, p, lang) {
                               "aquamarine","darkseagreen1","lightgreen",
                               "palegreen3")) }
   return(p)
+}
+
+# Takes in a statistic 'val' and a category 'cat' and returns the colour of the
+#   text box based on the value of the statistic ('cat' is one of "pos" or 
+#   "change")
+recolourBox <- function(val, cat) {
+  if(cat=="pos") {
+    if(is.na(val)) { return(HTML_COLOURS["null"]) }
+    if(val>=80) { return(HTML_COLOURS["steelblue4"]) }
+    if(val>=70) { return(HTML_COLOURS["steelblue3"]) }
+    if(val>=60) { return(HTML_COLOURS["lightskyblue"]) }
+    if(val>=50) { return(HTML_COLOURS["lightskyblue1"]) }
+    return(HTML_COLOURS["aliceblue"]) }
+  else {
+    if(is.na(val)) { return(HTML_COLOURS["null"]) }
+    if(val>=10) { return(HTML_COLOURS["palegreen3"]) }
+    if(val>=5) { return(HTML_COLOURS["darkseagreen2"]) }
+    if(val>-5) { return(HTML_COLOURS["snow"]) }
+    if(val>-10) { return(HTML_COLOURS["pink"]) }
+    return(HTML_COLOURS["lightcoral"]) }
+}
+
+# Takes in a statistic 'val' and a category 'cat' and returns the colour of the
+#   text based on the value of the statistic ('cat' is one of "pos" or "change")
+recolourText <- function(val, cat) {
+  if(cat=="pos") {
+    if(is.na(val)) { return(HTML_COLOURS["grey80"]) }
+    if(val>=50) { return(HTML_COLOURS["white"]) }
+    return(HTML_COLOURS["slategray3"]) }
+  else {
+    if(is.na(val)) { return(HTML_COLOURS["grey80"]) }
+    if(val>=5) { return(HTML_COLOURS["palegreen4"]) }
+    if(val>-5) { return(HTML_COLOURS["grey60"]) }
+    return(HTML_COLOURS["firebrick"]) }
+}
+
+# Takes in a statistic 'val' and a category 'cat' and formats 'val' as an
+#   appropriate text string based on the value of the statistic ('cat' is one of
+#   "pos" or "change")
+formatChangeText <- function(val, cat) {
+  if(cat=="pos") {
+    if(is.na(val)) { return("--") }
+    return(as.character(val)) }
+  else {
+    if(is.na(val)) { return("--") }
+    if(val>0) { return(paste0("+",val)) }
+    return(as.character(val)) }
 }
 
 ## ~~~~ Main server function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -881,200 +860,49 @@ server <- function(input, output, session) {
           #   responses; darker blue backgrounds for higher proportions
           #   (categories: <50%, 50-59%, 60-69%, 70-79%, 80-100%)
           
-          if(is.na(positive)) {
-            # Null case
-            htmlstr <-
-              paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["null"],
-                                     HTML_COLOURS["grey80"],
-                                     HTML_COLOURS["grey80"],"--"))
-            htmlstr3 <-
-              paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["null"],
-                                      HTML_COLOURS["grey80"],
-                                      HTML_COLOURS["grey80"],"--")) }
-          else {
-            if(positive >= 80) {
-              htmlstr <-
-                paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["steelblue4"],
-                                       HTML_COLOURS["white"],
-                                       HTML_COLOURS["white"],positive))
-              htmlstr3 <-
-                paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["steelblue4"],
-                                        HTML_COLOURS["white"],
-                                        HTML_COLOURS["white"],positive)) }
-            else if(positive >= 70 & positive < 80) {
-              htmlstr <-
-                paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["steelblue3"],
-                                       HTML_COLOURS["white"],
-                                       HTML_COLOURS["white"],positive))
-              htmlstr3 <-
-                paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["steelblue3"],
-                                        HTML_COLOURS["white"],
-                                        HTML_COLOURS["white"],positive)) }
-            else if(positive >= 60 & positive < 70) {
-              htmlstr <-
-                paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["lightskyblue"],
-                                       HTML_COLOURS["white"],
-                                       HTML_COLOURS["white"],positive))
-              htmlstr3 <-
-                paste0(htmlstr3,sprintf(rowTemplate3,
-                                        HTML_COLOURS["lightskyblue"],
-                                        HTML_COLOURS["white"],
-                                        HTML_COLOURS["white"],positive)) }
-            else if(positive >= 50 & positive < 60) {
-              htmlstr <-
-                paste0(htmlstr,
-                       sprintf(rowTemplate,HTML_COLOURS["lightskyblue1"],
-                               HTML_COLOURS["white"],HTML_COLOURS["white"],
-                               positive))
-              htmlstr3 <-
-                paste0(htmlstr3,
-                       sprintf(rowTemplate3,HTML_COLOURS["lightskyblue1"],
-                               HTML_COLOURS["white"],HTML_COLOURS["white"],
-                               positive)) }
-            else {
-              htmlstr <-
-                paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["aliceblue"],
-                                       HTML_COLOURS["slategray3"],
-                                       HTML_COLOURS["slategray3"],positive))
-              htmlstr3 <-
-                paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["aliceblue"],
-                                        HTML_COLOURS["slategray3"],
-                                        HTML_COLOURS["slategray3"],positive)) }}
+          htmlstr <-
+            paste0(htmlstr,
+                   sprintf(rowTemplate,recolourBox(positive,"pos"),
+                           recolourText(positive,"pos"),
+                           recolourText(positive,"pos"),
+                           formatChangeText(positive,"pos")))
+          htmlstr3 <-
+            paste0(htmlstr3,
+                   sprintf(rowTemplate3,recolourBox(positive,"pos"),
+                           recolourText(positive,"pos"),
+                           recolourText(positive,"pos"),
+                           formatChangeText(positive,"pos")))
           
           # Adds change data vs ROEB to HTML for second column; darker green
           #   for larger positive changes and darker red for larger negative
           #   changes (categories: -10% or more extreme, -9 to -5%, -4 to 4%,
           #   +5 to +9%, +10% or more extreme)
           
-          if(is.na(change1)) {
-            # Null case
-            htmlstr2 <-
-              paste0(htmlstr2,
-                     sprintf(rowTemplate2,HTML_COLOURS["null"],
-                             HTML_COLOURS["grey80"],"ROEB",
-                             HTML_COLOURS["grey80"],"--"))
-            htmlstr4 <-
-              paste0(htmlstr4,
-                     sprintf(rowTemplate4,HTML_COLOURS["null"],
-                             HTML_COLOURS["grey80"],HTML_COLOURS["grey80"],
-                             "--"))}
-          else {
-            if(change1 >= 10) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["palegreen3"],
-                               HTML_COLOURS["seagreen"],"ROEB",
-                               HTML_COLOURS["seagreen"],paste0("+",change1)))
-              htmlstr4 <-
-                paste0(htmlstr4,
-                       sprintf(rowTemplate4,HTML_COLOURS["palegreen3"],
-                               HTML_COLOURS["seagreen"],
-                               HTML_COLOURS["seagreen"],paste0("+",change1))) }
-            else if(change1 >= 5) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["darkseagreen2"],
-                               HTML_COLOURS["seagreen"],"ROEB",
-                               HTML_COLOURS["seagreen"],paste0("+",change1)))
-              htmlstr4 <-
-                paste0(htmlstr4,
-                       sprintf(rowTemplate4,HTML_COLOURS["darkseagreen2"],
-                               HTML_COLOURS["seagreen"],
-                               HTML_COLOURS["seagreen"],paste0("+",change1))) }
-            else if(change1 > 0) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["snow"],
-                               HTML_COLOURS["grey60"],"ROEB",
-                               HTML_COLOURS["grey60"],paste0("+",change1)))
-              htmlstr4 <-
-                paste0(htmlstr4,
-                       sprintf(rowTemplate4,HTML_COLOURS["snow"],
-                               HTML_COLOURS["grey60"],HTML_COLOURS["grey60"],
-                               paste0("+",change1))) }
-            else if(change1 > -5) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["snow"],
-                               HTML_COLOURS["grey60"],"ROEB",
-                               HTML_COLOURS["grey60"],change1))
-              htmlstr4 <-
-                paste0(htmlstr4,
-                       sprintf(rowTemplate4,HTML_COLOURS["snow"],
-                               HTML_COLOURS["grey60"],HTML_COLOURS["grey60"],
-                               change1)) }
-            else if(change1 > -10) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["pink"],
-                               HTML_COLOURS["firebrick"],"ROEB",
-                               HTML_COLOURS["firebrick"],change1))
-              htmlstr4 <-
-                paste0(htmlstr4,
-                       sprintf(rowTemplate4,HTML_COLOURS["pink"],
-                               HTML_COLOURS["firebrick"],
-                               HTML_COLOURS["firebrick"],change1)) }
-            else {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["lightcoral"],
-                               HTML_COLOURS["firebrick"],"ROEB",
-                               HTML_COLOURS["firebrick"],change1))
-              htmlstr4 <-
-                paste0(htmlstr4,
-                       sprintf(rowTemplate4,HTML_COLOURS["lightcoral"],
-                               HTML_COLOURS["firebrick"],
-                               HTML_COLOURS["firebrick"],change1)) }}
+          htmlstr2 <-
+            paste0(htmlstr2,
+                   sprintf(rowTemplate2,recolourBox(change1,"change"),
+                           recolourText(change1,"change"),"ROEB",
+                           recolourText(change1,"change"),
+                           formatChangeText(change1,"change")))
+          
+          htmlstr4 <-
+            paste0(htmlstr4,
+                   sprintf(rowTemplate4,recolourBox(change1,"change"),
+                           recolourText(change1,"change"),
+                           recolourText(change1,"change"),
+                           formatChangeText(change1,"change")))
           
           # Adds change data vs 2018/2017 to HTML for second column; darker
           #   green for larger positive changes and darker red for larger
           #   negative changes (categories: -10% or more extreme, -9 to -5%, -4
           #   to 4%, +5 to +9%, +10% or more extreme)
           
-          if(is.na(change2)) {
-            # Null case
-            htmlstr2 <-
-              paste0(htmlstr2,
-                     sprintf(rowTemplate2,HTML_COLOURS["null"],
-                             HTML_COLOURS["grey80"],input$againstp1,
-                             HTML_COLOURS["grey80"],"--"))}
-          else {
-            if(change2 >= 10) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["palegreen3"],
-                               HTML_COLOURS["seagreen"],input$againstp1,
-                               HTML_COLOURS["seagreen"],paste0("+",change2)))}
-            else if(change2 >= 5) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["darkseagreen2"],
-                               HTML_COLOURS["seagreen"],input$againstp1,
-                               HTML_COLOURS["seagreen"],paste0("+",change2)))}
-            else if(change2 > 0) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["snow"],
-                               HTML_COLOURS["grey60"],input$againstp1,
-                               HTML_COLOURS["grey60"],paste0("+",change2))) }
-            else if(change2 > -5) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["snow"],
-                               HTML_COLOURS["grey60"],input$againstp1,
-                               HTML_COLOURS["grey60"],change2)) }
-            else if(change2 > -10) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["pink"],
-                               HTML_COLOURS["firebrick"],input$againstp1,
-                               HTML_COLOURS["firebrick"],change2)) }
-            else {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["lightcoral"],
-                               HTML_COLOURS["firebrick"],input$againstp1,
-                               HTML_COLOURS["firebrick"],change2)) }}
+          htmlstr2 <-
+            paste0(htmlstr2,
+                   sprintf(rowTemplate2,recolourBox(change2,"change"),
+                           recolourText(change2,"change"),input$againstp1,
+                           recolourText(change2,"change"),
+                           formatChangeText(change2,"change")))
         })
       
       # Closes all HTML tags
@@ -1410,200 +1238,49 @@ server <- function(input, output, session) {
           #   responses; darker blue backgrounds for higher proportions
           #   (categories: <50%, 50-59%, 60-69%, 70-79%, 80-100%)
           
-          if(is.na(positive)){
-            # Null case
-            htmlstr <-
-              paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["null"],
-                                     HTML_COLOURS["grey80"],
-                                     HTML_COLOURS["grey80"],"--"))
-            htmlstr3 <-
-              paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["null"],
-                                      HTML_COLOURS["grey80"],
-                                      HTML_COLOURS["grey80"],"--")) }
-          else {
-            if(positive >= 80) {
-              htmlstr <-
-                paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["steelblue4"],
-                                       HTML_COLOURS["white"],
-                                       HTML_COLOURS["white"],positive))
-              htmlstr3 <-
-                paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["steelblue4"],
-                                        HTML_COLOURS["white"],
-                                        HTML_COLOURS["white"],positive)) }
-            else if(positive >= 70 & positive < 80) {
-              htmlstr <-
-                paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["steelblue3"],
-                                       HTML_COLOURS["white"],
-                                       HTML_COLOURS["white"],positive))
-              htmlstr3 <-
-                paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["steelblue3"],
-                                        HTML_COLOURS["white"],
-                                        HTML_COLOURS["white"],positive)) }
-            else if(positive >= 60 & positive < 70) {
-              htmlstr <-
-                paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["lightskyblue"],
-                                       HTML_COLOURS["white"],
-                                       HTML_COLOURS["white"],positive))
-              htmlstr3 <-
-                paste0(htmlstr3,
-                       sprintf(rowTemplate3,HTML_COLOURS["lightskyblue"],
-                               HTML_COLOURS["white"],HTML_COLOURS["white"],
-                               positive)) }
-            else if(positive >= 50 & positive < 60) {
-              htmlstr <-
-                paste0(htmlstr,
-                       sprintf(rowTemplate,HTML_COLOURS["lightskyblue1"],
-                               HTML_COLOURS["white"],HTML_COLOURS["white"],
-                               positive))
-              htmlstr3 <-
-                paste0(htmlstr3,
-                       sprintf(rowTemplate3,HTML_COLOURS["lightskyblue1"],
-                               HTML_COLOURS["white"],HTML_COLOURS["white"],
-                               positive)) }
-            else {
-              htmlstr <-
-                paste0(htmlstr,sprintf(rowTemplate,HTML_COLOURS["aliceblue"],
-                                       HTML_COLOURS["slategray3"],
-                                       HTML_COLOURS["slategray3"],positive))
-              htmlstr3 <-
-                paste0(htmlstr3,sprintf(rowTemplate3,HTML_COLOURS["aliceblue"],
-                               HTML_COLOURS["slategray3"],
-                               HTML_COLOURS["slategray3"],positive)) }}
+          htmlstr <-
+            paste0(htmlstr,
+                   sprintf(rowTemplate,recolourBox(positive,"pos"),
+                           recolourText(positive,"pos"),
+                           recolourText(positive,"pos"),
+                           formatChangeText(positive,"pos")))
+          htmlstr3 <-
+            paste0(htmlstr3,
+                   sprintf(rowTemplate3,recolourBox(positive,"pos"),
+                           recolourText(positive,"pos"),
+                           recolourText(positive,"pos"),
+                           formatChangeText(positive,"pos")))
           
           # Adds change data vs ROEB to HTML for second column; darker green
           #   for larger positive changes and darker red for larger negative
           #   changes (categories: -10% or more extreme, -9 to -5%, -4 to 4%,
           #   +5 to +9%, +10% or more extreme)
           
-          if(is.na(change1)) {
-            # Null case
-            htmlstr2 <-
-              paste0(htmlstr2,
-                     sprintf(rowTemplate2,HTML_COLOURS["null"],
-                             HTML_COLOURS["grey80"],"la DGORAL",
-                             HTML_COLOURS["grey80"],"--"))
-            htmlstr4 <-
-              paste0(htmlstr4,
-                     sprintf(rowTemplate4,HTML_COLOURS["null"],
-                             HTML_COLOURS["grey80"],
-                             HTML_COLOURS["grey80"],"--")) }
-          else {
-            if(change1 >= 10) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["palegreen3"],
-                               HTML_COLOURS["seagreen"],"la DGORAL",
-                               HTML_COLOURS["seagreen"],paste0("+",change1)))
-              htmlstr4 <-
-                paste0(htmlstr4,
-                       sprintf(rowTemplate4,HTML_COLOURS["palegreen3"],
-                               HTML_COLOURS["seagreen"],
-                               HTML_COLOURS["seagreen"],paste0("+",change1))) }
-            else if(change1 >= 5) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["darkseagreen2"],
-                               HTML_COLOURS["seagreen"],"la DGORAL",
-                               HTML_COLOURS["seagreen"],paste0("+",change1)))
-              htmlstr4 <-
-                paste0(htmlstr4,
-                       sprintf(rowTemplate4,HTML_COLOURS["darkseagreen2"],
-                               HTML_COLOURS["seagreen"],
-                               HTML_COLOURS["seagreen"],paste0("+",change1))) }
-            else if(change1 > 0) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["snow"],
-                               HTML_COLOURS["grey60"],"la DGORAL",
-                               HTML_COLOURS["grey60"],paste0("+",change1)))
-              htmlstr4 <-
-                paste0(htmlstr4,
-                       sprintf(rowTemplate4,HTML_COLOURS["snow"],
-                               HTML_COLOURS["grey60"],
-                               HTML_COLOURS["grey60"],paste0("+",change1))) }
-            else if(change1 > -5) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["snow"],
-                               HTML_COLOURS["grey60"],"la DGORAL",
-                               HTML_COLOURS["grey60"],change1))
-              htmlstr4 <-
-                paste0(htmlstr4,
-                       sprintf(rowTemplate4,HTML_COLOURS["snow"],
-                               HTML_COLOURS["grey60"],
-                               HTML_COLOURS["grey60"],change1)) }
-            else if(change1 > -10) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["pink"],
-                               HTML_COLOURS["firebrick"],"la DGORAL",
-                               HTML_COLOURS["firebrick"],change1))
-              htmlstr4 <-
-                paste0(htmlstr4,
-                       sprintf(rowTemplate4,HTML_COLOURS["pink"],
-                               HTML_COLOURS["firebrick"],
-                               HTML_COLOURS["firebrick"],change1)) }
-            else {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["lightcoral"],
-                               HTML_COLOURS["firebrick"],"la DGORAL",
-                               HTML_COLOURS["firebrick"],change1))
-              htmlstr4 <-
-                paste0(htmlstr4,
-                       sprintf(rowTemplate4,HTML_COLOURS["lightcoral"],
-                               HTML_COLOURS["firebrick"],
-                               HTML_COLOURS["firebrick"],change1)) }}
+          htmlstr2 <-
+            paste0(htmlstr2,
+                   sprintf(rowTemplate2,recolourBox(change1,"change"),
+                           recolourText(change1,"change"),"la DGORAL",
+                           recolourText(change1,"change"),
+                           formatChangeText(change1,"change")))
+          
+          htmlstr4 <-
+            paste0(htmlstr4,
+                   sprintf(rowTemplate4,recolourBox(change1,"change"),
+                           recolourText(change1,"change"),
+                           recolourText(change1,"change"),
+                           formatChangeText(change1,"change")))
           
           # Adds change data vs 2018/2017 to HTML for second column; darker
           #   green for larger positive changes and darker red for larger
           #   negative changes (categories: -10% or more extreme, -9 to -5%, -4
           #   to 4%, +5 to +9%, +10% or more extreme)
           
-          if(is.na(change2)) {
-            # Null case
-            htmlstr2 <-
-              paste0(htmlstr2,
-                     sprintf(rowTemplate2,HTML_COLOURS["null"],
-                             HTML_COLOURS["grey80"],input$againstp4,
-                             HTML_COLOURS["grey80"],"--"))}
-          else {
-            if(change2 >= 10) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["palegreen3"],
-                               HTML_COLOURS["seagreen"],input$againstp4,
-                               HTML_COLOURS["seagreen"],paste0("+",change2)))}
-            else if(change2 >= 5) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["darkseagreen2"],
-                               HTML_COLOURS["seagreen"],input$againstp4,
-                               HTML_COLOURS["seagreen"],paste0("+",change2)))}
-            else if(change2 > 0) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["snow"],
-                               HTML_COLOURS["grey60"],input$againstp4,
-                               HTML_COLOURS["grey60"],paste0("+",change2))) }
-            else if(change2 > -5) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["snow"],
-                               HTML_COLOURS["grey60"],input$againstp4,
-                               HTML_COLOURS["grey60"],change2)) }
-            else if(change2 > -10) {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["pink"],
-                               HTML_COLOURS["firebrick"],input$againstp4,
-                               HTML_COLOURS["firebrick"],change2)) }
-            else {
-              htmlstr2 <-
-                paste0(htmlstr2,
-                       sprintf(rowTemplate2,HTML_COLOURS["lightcoral"],
-                               HTML_COLOURS["firebrick"],input$againstp4,
-                               HTML_COLOURS["firebrick"],change2)) }}
+          htmlstr2 <-
+            paste0(htmlstr2,
+                   sprintf(rowTemplate2,recolourBox(change2,"change"),
+                           recolourText(change2,"change"),input$againstp4,
+                           recolourText(change2,"change"),
+                           formatChangeText(change2,"change")))
         })
       
       # Closes all HTML tags
@@ -1671,6 +1348,327 @@ server <- function(input, output, session) {
         )
       )
     })
+  })
+  observeEvent(input$retrievepA,{
+    # Displays visual output when user clicks on button to retrieve data
+    
+    df <- data[data$ORGANIZATION_EN==input$directoratepA,]
+    dirs <- c("Regulatory Operations and Enforcement Branch (ROEB)"="ROEB",
+              DIRECTORATES_EN)
+    
+    # Variable 'htmlstr':
+    # Stores HTML text used to generate the table display
+    
+    htmlstr <-
+      "<table style='margin:10px 10px 20px 10px; width:99%'>
+         <tr class='heading'>
+           <td style='width:5%;'></td>
+           <td style='width:50%;'></td>
+           <td style='width:11%; text-align:center;'>
+             <strong>Positive in 2019</strong>
+           </td>
+           <td style='width:11%; text-align:center;'>
+             <strong>Versus ROEB in 2019</strong>
+           </td>
+           <td style='width:11%; text-align:center;'>
+             <strong>Average change from 2018*</strong>
+           </td>
+           <td style='width:11%; text-align:center;'>
+             <strong>Average change from 2017*</strong>
+           </td>
+         </tr>"
+    
+    # Variable 'rowTemplate':
+    # HTML format to generate one row of the table
+    
+    rowTemplate <-
+      "<tr class='body'>
+         <td style='width:5%%;'><button>+</button></td>
+         <td style='width:50%%;'><strong>%s</strong></td>
+         <td style='width:11%%;'>
+           <div class='well' style='padding:1px 15%% 0 15%%;background-color:%s;
+             height:40px; text-align:right;'>
+             <strong style='color:%s; font-size:18pt;'>
+               %s%%
+             </strong>
+           </div>
+         </td>
+         <td style='width:11%%;'>
+           <div class='well' style='padding:1px 15%% 0 15%%;background-color:%s;
+             height:40px; text-align:right;'>
+             <strong style='color:%s; font-size:18pt;'>
+               %s
+             </strong>
+           </div>
+         </td>
+         <td style='width:11%%;'>
+           <div class='well' style='padding:1px 15%% 0 15%%;background-color:%s;
+             height:40px; text-align:right;'>
+             <strong style='color:%s; font-size:18pt;'>
+               %s
+             </strong>
+           </div>
+         </td>
+         <td style='width:11%%;'>
+           <div class='well' style='padding:1px 15%% 0 15%%;background-color:%s;
+             height:40px; text-align:right;'>
+             <strong style='color:%s; font-size:18pt;'>
+               %s
+             </strong>
+           </div>
+         </td>
+       </tr>"
+    
+    # Populates the rows of the table
+    for(thm in themes$THEME_EN) {
+      
+      # 'pos' takes average positive over the theme in 2019
+      d <- df[df$SURVEYR==2019 & df$THEME_EN==thm,]
+      if(is.nan(mean(d$POSITIVE,na.rm=TRUE))) { pos <- NA }
+      else { pos <- round(mean(d$POSITIVE,na.rm=TRUE),0) }
+      
+      # 'vs_roeb' takes change in average positive in directorate from average
+      #   positive in ROEB for 2019
+      isolate(
+        if(input$directoratepA=="ROEB") { vs_roeb <- NA }
+        else {
+          d <- data[data$SURVEYR==2019 & data$THEME_EN==thm
+                    & data$ORGANIZATION_EN=="ROEB",]
+          vs_roeb <- pos - round(mean(d$POSITIVE,na.rm=TRUE),0)
+          if(is.nan(vs_roeb)) { vs_roeb <- NA } })
+      
+      # 'vs_2018' takes change in average positive in directorate in 2019 from
+      #   average positive in same directorate in 2018 (questions must be
+      #   common to both years in order to count)
+      
+      data.f <- data[data$SURVEYR %in% c(2019,2018)
+                     & data$ORGANIZATION_EN==isolate(input$directoratepA)
+                     & data$THEME_EN==thm,]
+      allqs <- as.character(unique(data.f$QUESTION_EN))
+      qs <- c()
+      
+      for(q in allqs) {
+        # Question must be common to both years of data
+        if(q %in% data.f[data.f$SURVEYR==2019,"QUESTION_EN"]
+           & q %in% data.f[data.f$SURVEYR==2018,"QUESTION_EN"]) {
+          qs <- c(qs,q) }}
+      
+      d1 <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_EN %in% qs,]
+      d2 <- data.f[data.f$SURVEYR==2018 & data.f$QUESTION_EN %in% qs,]
+      vs_2018 <- round(mean(d1$POSITIVE,na.rm=TRUE),0) -
+        round(mean(d2$POSITIVE,na.rm=TRUE),0)
+      if(is.nan(vs_2018)) { vs_2018 <- NA }
+      
+      # 'vs_2017' takes change in average positive in directorate in 2019 from
+      #   average positive in same directorate in 2017 (questions must be
+      #   common to both years in order to count)
+      
+      data.f <- data[data$SURVEYR %in% c(2019,2017)
+                     & data$ORGANIZATION_EN==isolate(input$directoratepA)
+                     & data$THEME_EN==thm,]
+      allqs <- as.character(unique(data.f$QUESTION_EN))
+      qs <- c()
+      
+      for(q in allqs) {
+        # Question must be common to both years of data
+        if(q %in% data.f[data.f$SURVEYR==2019,"QUESTION_EN"]
+           & q %in% data.f[data.f$SURVEYR==2017,"QUESTION_EN"]) {
+          qs <- c(qs,q) }}
+      
+      d1 <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_EN %in% qs,]
+      d2 <- data.f[data.f$SURVEYR==2017 & data.f$QUESTION_EN %in% qs,]
+      vs_2017 <- round(mean(d1$POSITIVE,na.rm=TRUE),0) -
+        round(mean(d2$POSITIVE,na.rm=TRUE),0)
+      if(is.nan(vs_2017)) { vs_2017 <- NA }
+      
+      # Generates HTML text for next row and adds it to the table
+      newstr <- 
+        sprintf(rowTemplate,thm,recolourBox(pos,"pos"),recolourText(pos,"pos"),
+                formatChangeText(pos,"pos"),recolourBox(vs_roeb,"change"),
+                recolourText(vs_roeb,"change"),
+                formatChangeText(vs_roeb,"change"),
+                recolourBox(vs_2018,"change"),recolourText(vs_2018,"change"),
+                formatChangeText(vs_2018,"change"),
+                recolourBox(vs_2017,"change"),recolourText(vs_2017,"change"),
+                formatChangeText(vs_2017,"change"))
+      htmlstr <- paste0(htmlstr,newstr)
+    }
+    htmlstr <- paste0(htmlstr,"</table>")
+    
+    # Output results
+    output$resultspA <- renderUI({
+      isolate(
+        tagList(
+          h3(names(dirs)[dirs==input$directoratepA]),
+          h5("Average changes by theme"),
+          br(),
+          box(status=NULL,solidHeader=TRUE,width=12,HTML(htmlstr)),
+          br(),
+          p("*Only questions common to both years were included in
+            calculations.")
+        )
+      )})
+  })
+  observeEvent(input$retrievepB,{
+    # Displays visual output when user clicks on button to retrieve data
+    
+    df <- data[data$ORGANIZATION_FR==input$directoratepB,]
+    dirs <- c("Direction générale des opérations réglementaires et de l’application de la loi (DGORAL)"=
+                "DGORAL",
+              DIRECTORATES_FR)
+    
+    # Variable 'htmlstr':
+    # Stores HTML text used to generate the table display
+    
+    htmlstr <-
+      "<table style='margin:10px 10px 20px 10px; width:99%'>
+         <tr class='heading'>
+           <td style='width:5%;'></td>
+           <td style='width:50%;'></td>
+           <td style='width:11%; text-align:center;'>
+             <strong>Positives in 2019</strong>
+           </td>
+           <td style='width:11%; text-align:center;'>
+             <strong>Variation par rapport à la DGORAL en 2019</strong>
+           </td>
+           <td style='width:11%; text-align:center;'>
+             <strong>Variation moyenne par rapport à 2018*</strong>
+           </td>
+           <td style='width:11%; text-align:center;'>
+             <strong>Variation moyenne par rapport à 2017*</strong>
+           </td>
+         </tr>"
+    
+    # Variable 'rowTemplate':
+    # HTML format to generate one row of the table
+    
+    rowTemplate <-
+      "<tr class='body'>
+         <td style='width:5%%;'><button>+</button></td>
+         <td style='width:50%%;'><strong>%s</strong></td>
+         <td style='width:11%%;'>
+           <div class='well' style='padding:1px 15%% 0 15%%;background-color:%s;
+             height:40px; text-align:right;'>
+             <strong style='color:%s; font-size:18pt;'>
+               %s%%
+             </strong>
+           </div>
+         </td>
+         <td style='width:11%%;'>
+           <div class='well' style='padding:1px 15%% 0 15%%;background-color:%s;
+             height:40px; text-align:right;'>
+             <strong style='color:%s; font-size:18pt;'>
+               %s
+             </strong>
+           </div>
+         </td>
+         <td style='width:11%%;'>
+           <div class='well' style='padding:1px 15%% 0 15%%;background-color:%s;
+             height:40px; text-align:right;'>
+             <strong style='color:%s; font-size:18pt;'>
+               %s
+             </strong>
+           </div>
+         </td>
+         <td style='width:11%%;'>
+           <div class='well' style='padding:1px 15%% 0 15%%;background-color:%s;
+             height:40px; text-align:right;'>
+             <strong style='color:%s; font-size:18pt;'>
+               %s
+             </strong>
+           </div>
+         </td>
+       </tr>"
+    
+    # Populates the rows of the table
+    for(thm in themes$THEME_FR) {
+      
+      # 'pos' takes average positive over the theme in 2019
+      d <- df[df$SURVEYR==2019 & df$THEME_FR==thm,]
+      if(is.nan(mean(d$POSITIVE,na.rm=TRUE))) { pos <- NA }
+      else { pos <- round(mean(d$POSITIVE,na.rm=TRUE),0) }
+      
+      # 'vs_roeb' takes change in average positive in directorate from average
+      #   positive in ROEB for 2019
+      isolate(
+        if(input$directoratepB=="DGORAL") { vs_roeb <- NA }
+        else {
+          d <- data[data$SURVEYR==2019 & data$THEME_FR==thm
+                    & data$ORGANIZATION_FR=="DGORAL",]
+          vs_roeb <- pos - round(mean(d$POSITIVE,na.rm=TRUE),0)
+          if(is.nan(vs_roeb)) { vs_roeb <- NA } })
+      
+      # 'vs_2018' takes change in average positive in directorate in 2019 from
+      #   average positive in same directorate in 2018 (questions must be
+      #   common to both years in order to count)
+      
+      data.f <- data[data$SURVEYR %in% c(2019,2018)
+                     & data$ORGANIZATION_FR==isolate(input$directoratepB)
+                     & data$THEME_FR==thm,]
+      allqs <- as.character(unique(data.f$QUESTION_FR))
+      qs <- c()
+      
+      for(q in allqs) {
+        # Question must be common to both years of data
+        if(q %in% data.f[data.f$SURVEYR==2019,"QUESTION_FR"]
+           & q %in% data.f[data.f$SURVEYR==2018,"QUESTION_FR"]) {
+          qs <- c(qs,q) }}
+      
+      d1 <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_FR %in% qs,]
+      d2 <- data.f[data.f$SURVEYR==2018 & data.f$QUESTION_FR %in% qs,]
+      vs_2018 <- round(mean(d1$POSITIVE,na.rm=TRUE),0) -
+        round(mean(d2$POSITIVE,na.rm=TRUE),0)
+      if(is.nan(vs_2018)) { vs_2018 <- NA }
+      
+      # 'vs_2017' takes change in average positive in directorate in 2019 from
+      #   average positive in same directorate in 2017 (questions must be
+      #   common to both years in order to count)
+      
+      data.f <- data[data$SURVEYR %in% c(2019,2017)
+                     & data$ORGANIZATION_FR==isolate(input$directoratepB)
+                     & data$THEME_FR==thm,]
+      allqs <- as.character(unique(data.f$QUESTION_FR))
+      qs <- c()
+      
+      for(q in allqs) {
+        # Question must be common to both years of data
+        if(q %in% data.f[data.f$SURVEYR==2019,"QUESTION_FR"]
+           & q %in% data.f[data.f$SURVEYR==2017,"QUESTION_FR"]) {
+          qs <- c(qs,q) }}
+      
+      d1 <- data.f[data.f$SURVEYR==2019 & data.f$QUESTION_FR %in% qs,]
+      d2 <- data.f[data.f$SURVEYR==2017 & data.f$QUESTION_FR %in% qs,]
+      vs_2017 <- round(mean(d1$POSITIVE,na.rm=TRUE),0) -
+        round(mean(d2$POSITIVE,na.rm=TRUE),0)
+      if(is.nan(vs_2017)) { vs_2017 <- NA }
+      
+      # Generates HTML text for next row and adds it to the table
+      newstr <- 
+        sprintf(rowTemplate,thm,recolourBox(pos,"pos"),recolourText(pos,"pos"),
+                formatChangeText(pos,"pos"),recolourBox(vs_roeb,"change"),
+                recolourText(vs_roeb,"change"),
+                formatChangeText(vs_roeb,"change"),
+                recolourBox(vs_2018,"change"),recolourText(vs_2018,"change"),
+                formatChangeText(vs_2018,"change"),
+                recolourBox(vs_2017,"change"),recolourText(vs_2017,"change"),
+                formatChangeText(vs_2017,"change"))
+      htmlstr <- paste0(htmlstr,newstr)
+    }
+    htmlstr <- paste0(htmlstr,"</table>")
+    
+    # Output results
+    output$resultspB <- renderUI({
+      isolate(
+        tagList(
+          h3(names(dirs)[dirs==input$directoratepB]),
+          h5("Variations moyennes par thème"),
+          br(),
+          box(status=NULL,solidHeader=TRUE,width=12,HTML(htmlstr)),
+          br(),
+          p("*Les calculs sont basés sur les questions communes entre les deux
+            années seulement.")
+        )
+      )})
   })
   
   # ---- Plot outputs ----------------------------------------------------------

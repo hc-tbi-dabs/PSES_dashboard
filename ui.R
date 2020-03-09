@@ -3,10 +3,10 @@
 
  # Created by: Sijia Wang
  # Team: Data Analytics and Business Solutions (DABS)
- # Version: 1.0
- # Last modified: 2020-02-26
- # Description: User interface for 2019 PSES/SAFF results dashboard for ROEB
- #   and its directorates.
+ # Version: 1.1
+ # Last modified: 2020-03-04
+ # Description: User interface for 2019 PSES/SAFF dashboard for ROEB and its
+ #   directorates.
 
 library(shiny)
 library(shinydashboard)
@@ -28,6 +28,9 @@ sidebar <- dashboardSidebar(
   
   # Tabs:
   #
+  #   A/B. Summary by Directorate / Résumé par direction - convenient display
+  #         of high-level trends and statistics by theme
+  #
   #   1/4. Compare Data / Comparer les données - allows users to compare the
   #         2019 results for individual directorates of ROEB against previous
   #         years or ROEB overall; specify questions of interest by theme,
@@ -42,10 +45,16 @@ sidebar <- dashboardSidebar(
   
   sidebarMenu(
     id="tabs",
-    menuItem("Compare Data", tabName="compare_en", icon=icon("project-diagram"),
-             selected=TRUE),
+    # A:
+    menuItem("Summary by Directorate", tabName="summary_en",
+             icon=icon("chart-line"), selected=TRUE),
+    menuItem("Compare Data", tabName="compare_en",
+             icon=icon("project-diagram")),
     menuItem("Full Results by Year", tabName="full_en", icon=icon("map")),
     menuItem("About PSES", tabName="about_en",icon=icon("question")),
+    # B:
+    menuItem("Résumé par direction", tabName="summary_fr",
+             icon=icon("chart-line")),
     menuItem("Comparer les données", tabName="compare_fr",
              icon=icon("project-diagram")),
     menuItem("Résultats complets par année", tabName="full_fr",
@@ -60,6 +69,39 @@ sidebar <- dashboardSidebar(
 
 body <- dashboardBody(
   tabItems(
+    
+    # Tab A -----------------------------
+    tabItem(
+      tabName="summary_en",
+      fluidPage(
+        titlePanel("Summary of Changes in ROEB"),
+        fluidRow(
+          id="selectorpA",
+          style="margin:30px 30px 10px 30px;",
+          tags$table(
+            tags$tr(
+              tags$td(class="textlabel",strong("Organization:")),
+              tags$td(
+                selectInput(
+                  inputId="directoratepA",label=NULL,              
+                  c("Regulatory Operations and Enforcement Branch (ROEB)"="ROEB",
+                    DIRECTORATES_EN),
+                  selected="ROEB", width="540px"))
+            ),
+            tags$tr(tags$td(colspan=6,p(""))),
+            tags$tr(
+              tags$td(),
+              tags$td(colspan=3,
+                      actionButton(inputId="retrievepA",label="Retrieve data",
+                                   style="border-radius:5px;")),
+              tags$td(colspan=2)
+            ))),
+        fluidRow(
+          id="displaypA",
+          style="margin:30px 30px 10px 30px;",
+          uiOutput(outputId="resultspA")
+        )
+      )),
     
     # Tab 1 -----------------------------
     tabItem(
@@ -156,6 +198,41 @@ body <- dashboardBody(
                  "here"),
           "to learn more."
         ))),
+    
+    # Tab B -----------------------------
+    tabItem(
+      tabName="summary_fr",
+      fluidPage(
+        titlePanel("Résumé des changements dans la DGORAL"),
+        fluidRow(
+          id="selectorpB",
+          style="margin:30px 30px 10px 30px;",
+          tags$table(
+            tags$tr(
+              tags$td(class="textlabel",strong("Organization:")),
+              tags$td(
+                selectInput(
+                  inputId="directoratepB",label=NULL,              
+                  c("Direction générale des opérations réglementaires et de l’application de la loi (DGORAL)"=
+                      "DGORAL",
+                    DIRECTORATES_FR),
+                  selected="DGORAL", width="580px"))
+            ),
+            tags$tr(tags$td(colspan=6,p(""))),
+            tags$tr(
+              tags$td(),
+              tags$td(colspan=3,
+                      actionButton(inputId="retrievepB",
+                                   label="Rechercher les données",
+                                   style="border-radius:5px;")),
+              tags$td(colspan=2)
+            ))),
+        fluidRow(
+          id="displaypB",
+          style="margin:30px 30px 10px 30px;",
+          uiOutput(outputId="resultspB")
+        )
+      )),
     
     # Tab 4 -----------------------------
     tabItem(
