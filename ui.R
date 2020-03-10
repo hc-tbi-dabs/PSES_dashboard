@@ -4,7 +4,7 @@
  # Created by: Sijia Wang
  # Team: Data Analytics and Business Solutions (DABS)
  # Version: 1.1
- # Last modified: 2020-03-04
+ # Last modified: 2020-03-10
  # Description: User interface for 2019 PSES/SAFF dashboard for ROEB and its
  #   directorates.
 
@@ -203,7 +203,7 @@ body <- dashboardBody(
     tabItem(
       tabName="summary_fr",
       fluidPage(
-        titlePanel("Résumé des changements dans la DGORAL"),
+        titlePanel("Résumé des variations dans la DGORAL"),
         fluidRow(
           id="selectorpB",
           style="margin:30px 30px 10px 30px;",

@@ -4,7 +4,7 @@
  # Created by: Sijia Wang
  # Team: Data Analytics and Business Solutions (DABS)
  # Version: 1.1
- # Last modified: 2020-03-05
+ # Last modified: 2020-03-10
  # Description: Server for 2019 PSES/SAFF dashboard for ROEB and its
  #   directorates.
 
@@ -1362,9 +1362,8 @@ server <- function(input, output, session) {
     htmlstr <-
       "<table style='margin:10px 10px 20px 10px; width:99%'>
          <tr class='heading'>
-           <td style='width:5%;'></td>
            <td style='width:50%;'></td>
-           <td style='width:11%; text-align:center;'>
+           <td style='width:13%; text-align:center; padding-left:12px;'>
              <strong>Positive in 2019</strong>
            </td>
            <td style='width:11%; text-align:center;'>
@@ -1383,9 +1382,10 @@ server <- function(input, output, session) {
     
     rowTemplate <-
       "<tr class='body'>
-         <td style='width:5%%;'><button>+</button></td>
-         <td style='width:50%%;'><strong>%s</strong></td>
-         <td style='width:11%%;'>
+         <td style='width:50%%; background-color:%s; padding-left:5px;'>
+           <strong>%s</strong>
+         </td>
+         <td style='width:13%%; padding-left:12px;'>
            <div class='well' style='padding:1px 15%% 0 15%%;background-color:%s;
              height:40px; text-align:right;'>
              <strong style='color:%s; font-size:18pt;'>
@@ -1481,9 +1481,14 @@ server <- function(input, output, session) {
         round(mean(d2$POSITIVE,na.rm=TRUE),0)
       if(is.nan(vs_2017)) { vs_2017 <- NA }
       
+      # Odd rows grey, even rows white
+      if(which(themes$THEME_EN==thm) %% 2) { col <- "#fafafa" }
+      else { col <- HTML_COLOURS["white"] }
+      
       # Generates HTML text for next row and adds it to the table
       newstr <- 
-        sprintf(rowTemplate,thm,recolourBox(pos,"pos"),recolourText(pos,"pos"),
+        sprintf(rowTemplate,
+                col,thm,recolourBox(pos,"pos"),recolourText(pos,"pos"),
                 formatChangeText(pos,"pos"),recolourBox(vs_roeb,"change"),
                 recolourText(vs_roeb,"change"),
                 formatChangeText(vs_roeb,"change"),
@@ -1523,9 +1528,8 @@ server <- function(input, output, session) {
     htmlstr <-
       "<table style='margin:10px 10px 20px 10px; width:99%'>
          <tr class='heading'>
-           <td style='width:5%;'></td>
            <td style='width:50%;'></td>
-           <td style='width:11%; text-align:center;'>
+           <td style='width:13%; text-align:center; padding-left:12px;'>
              <strong>Positives in 2019</strong>
            </td>
            <td style='width:11%; text-align:center;'>
@@ -1544,9 +1548,10 @@ server <- function(input, output, session) {
     
     rowTemplate <-
       "<tr class='body'>
-         <td style='width:5%%;'><button>+</button></td>
-         <td style='width:50%%;'><strong>%s</strong></td>
-         <td style='width:11%%;'>
+         <td style='width:50%%; background-color:%s; padding-left:5px;'>
+           <strong>%s</strong>
+         </td>
+         <td style='width:13%%; padding-left:12px;'>
            <div class='well' style='padding:1px 15%% 0 15%%;background-color:%s;
              height:40px; text-align:right;'>
              <strong style='color:%s; font-size:18pt;'>
@@ -1642,9 +1647,14 @@ server <- function(input, output, session) {
         round(mean(d2$POSITIVE,na.rm=TRUE),0)
       if(is.nan(vs_2017)) { vs_2017 <- NA }
       
+      # Odd rows grey, even rows white
+      if(which(themes$THEME_FR==thm) %% 2) { col <- "#fafafa" }
+      else { col <- HTML_COLOURS["white"] }
+      
       # Generates HTML text for next row and adds it to the table
       newstr <- 
-        sprintf(rowTemplate,thm,recolourBox(pos,"pos"),recolourText(pos,"pos"),
+        sprintf(rowTemplate,
+                col,thm,recolourBox(pos,"pos"),recolourText(pos,"pos"),
                 formatChangeText(pos,"pos"),recolourBox(vs_roeb,"change"),
                 recolourText(vs_roeb,"change"),
                 formatChangeText(vs_roeb,"change"),
