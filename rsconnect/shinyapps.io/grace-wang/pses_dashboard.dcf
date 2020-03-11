@@ -1,0 +1,10 @@
+name: pses_dashboard
+title:
+username:
+account: grace-wang
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1935842
+bundleId: 2872474
+url: https://grace-wang.shinyapps.io/pses_dashboard/
+when: 1583951889.30832
