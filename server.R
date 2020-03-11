@@ -8,15 +8,7 @@
  # Description: Server for 2019 PSES/SAFF dashboard for ROEB and its
  #   directorates.
 
-library(shiny)
-library(shinydashboard)
-library(shinyjs)
-library(shinycssloaders)
-library(dplyr)
-library(ggplot2)
-library(plotly)
-library(reshape2)
-library(rmarkdown)
+## ~~~~ Data and functions for server ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Vector of question IDs of the format QXX or QXXx, where X is a digit from
 #   0-9 and x is a letter from a-z (e.g. Q07 or Q59a)

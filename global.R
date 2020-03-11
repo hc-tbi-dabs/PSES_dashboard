@@ -4,9 +4,19 @@
 # Created by: Sijia Wang
 # Team: Data Analytics and Business Solutions (DABS)
 # Version: 1.1
-# Last modified: 2020-03-04
+# Last modified: 2020-03-10
 # Description: Global data for 2019 PSES/SAFF dashboard for ROEB and its
 #   directorates.
+
+library(shiny)
+library(shinydashboard)
+library(shinyjs)
+library(shinycssloaders)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+library(reshape2)
+library(rmarkdown)
 
 ## ~~~~ Data Files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -16,17 +26,17 @@ questions <-
                        "IND_ID","SUBIND_EN","SUBIND_FR","SUBIND_ID"),
            stringsAsFactors=FALSE)
 themes <- 
-  read.csv("data/lookups/PSES_SAFF-Themes_Thèmes.csv",header=TRUE,
+  read.csv("data/lookups/PSES_SAFF-Themes.csv",header=TRUE,
            encoding="UTF-8",col.names=c("THEME_ID","THEME_EN","THEME_FR"),
            stringsAsFactors=FALSE)
 answers <-
-  read.csv("data/lookups/PSES_SAFF-Answers_Réponses.csv",header=TRUE,
+  read.csv("data/lookups/PSES_SAFF-Answers_Reponses.csv",header=TRUE,
            encoding="UTF-8",col.names=c(paste0("TYPE",1:7,"_EN"),
                                         paste0("TYPE",1:7,"_FR")),
            stringsAsFactors=FALSE)
 data <-
   read.csv(
-    "data/2019_2018_2017-PSES_SAFF-ROEB_DGORAL-Full_data_Données_complètes.csv",
+    "data/2019_2018_2017-PSES_SAFF-ROEB_DGORAL-Full_data_Donnees_completes.csv",
     header=TRUE,encoding="UTF-8",stringsAsFactors=FALSE)
 data <- data[,2:ncol(data)]
 

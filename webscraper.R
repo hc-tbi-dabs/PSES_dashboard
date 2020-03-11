@@ -3,8 +3,8 @@
 
   # Created by: Sijia Wang
   # Team: Data Analytics and Business Solutions (DABS)
-  # Version: 1.0
-  # Last modified: 2020-02-26
+  # Version: 1.1
+  # Last modified: 2020-03-11
   # Description: Run this program to update the local CSV from the Web.
 
   # Years: 2019, 2018, 2017
@@ -198,4 +198,4 @@ for(id3 in LEVEL3IDs_2017) {
 
 ## ~~~~ File output ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-write.csv(data,"data/2019_2018_2017-PSES_SAFF-ROEB_DGORAL-Full_data_Données_complètes.csv",fileEncoding="UTF-8")
+write.csv(data,"data/2019_2018_2017-PSES_SAFF-ROEB_DGORAL-Full_data_Donnees_completes.csv",fileEncoding="UTF-8")

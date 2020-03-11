@@ -8,18 +8,6 @@
  # Description: User interface for 2019 PSES/SAFF dashboard for ROEB and its
  #   directorates.
 
-library(shiny)
-library(shinydashboard)
-library(shinyjs)
-library(shinycssloaders)
-library(dplyr)
-
-## ~~~~ Data files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-themes <- read.csv(
-  "data/lookups/PSES_SAFF-Themes_Thèmes.csv", header=TRUE, encoding="UTF-8",
-  col.names=c("THEME_ID","THEME_EN","THEME_FR"), stringsAsFactors=FALSE)
-
 ## ~~~~ Dashboard components (header, sidebar, body) ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 header <- dashboardHeader(title = textOutput(outputId="title"))
